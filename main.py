@@ -89,7 +89,12 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Linux Privilege Escalation Automation Toolkit",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__,
+        epilog="""Examples:
+    python3 main.py
+    python3 main.py -o report.txt -f all -v
+    python3 main.py -f json -o findings.json
+    python3 main.py --skip kernel,caps -v
+    python3 main.py --quick -f html -o report.html""",
     )
     parser.add_argument("-o", "--output", metavar="FILE",
                         help="Write report to FILE (base name; extensions added per format)")
