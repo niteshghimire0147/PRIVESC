@@ -1,0 +1,137 @@
+[
+  {
+    "cve_id": "CVE-2021-4034",
+    "name": "PwnKit",
+    "description": "Polkit pkexec local privilege escalation. A memory corruption vulnerability in polkit's pkexec allows any unprivileged user to escalate to root.",
+    "affected_kernel_max": "5.15.999",
+    "affected_component": "polkit / pkexec",
+    "severity": "CRITICAL",
+    "cvss": "7.8",
+    "mitigation": "Update polkit package: sudo apt-get update && sudo apt-get install policykit-1",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2021-4034"
+  },
+  {
+    "cve_id": "CVE-2021-3156",
+    "name": "Baron Samedit",
+    "description": "Sudo heap-based buffer overflow allows privilege escalation to root. Affects sudo versions 1.8.2 to 1.8.31p2 and 1.9.0 to 1.9.5p1.",
+    "affected_kernel_max": "5.11.999",
+    "affected_component": "sudo",
+    "severity": "CRITICAL",
+    "cvss": "7.8",
+    "mitigation": "Update sudo: sudo apt-get install --only-upgrade sudo",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2021-3156"
+  },
+  {
+    "cve_id": "CVE-2022-0847",
+    "name": "Dirty Pipe",
+    "description": "A flaw in the way the pipe buffer flags are handled in Linux kernel 5.8+ allows unprivileged users to overwrite read-only files and escalate privileges.",
+    "affected_kernel_min": "5.8.0",
+    "affected_kernel_max": "5.16.10",
+    "affected_component": "Linux kernel pipe",
+    "severity": "CRITICAL",
+    "cvss": "7.8",
+    "mitigation": "Update to kernel 5.16.11, 5.15.25, or 5.10.102+",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2022-0847"
+  },
+  {
+    "cve_id": "CVE-2016-5195",
+    "name": "Dirty COW",
+    "description": "Race condition in Linux kernel memory subsystem (copy-on-write) allows unprivileged local users to gain write access to read-only memory mappings.",
+    "affected_kernel_max": "4.8.2",
+    "affected_component": "Linux kernel mm/gup.c",
+    "severity": "CRITICAL",
+    "cvss": "7.8",
+    "mitigation": "Update to kernel 4.8.3 or later; apply vendor patches",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2016-5195"
+  },
+  {
+    "cve_id": "CVE-2017-16995",
+    "name": "eBPF verifier vulnerability",
+    "description": "The eBPF verifier in Linux kernel through 4.14.8 allows local unprivileged users to cause a denial of service or possibly gain privileges.",
+    "affected_kernel_max": "4.14.8",
+    "affected_component": "Linux kernel eBPF",
+    "severity": "HIGH",
+    "cvss": "7.8",
+    "mitigation": "Update to kernel 4.14.9 or later",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2017-16995"
+  },
+  {
+    "cve_id": "CVE-2019-13272",
+    "name": "PTRACE_TRACEME privilege escalation",
+    "description": "kernel/ptrace.c in Linux through 5.1.17 mishandles the initialization of tracee->parent, which allows local users to obtain root access.",
+    "affected_kernel_max": "5.1.17",
+    "affected_component": "Linux kernel ptrace",
+    "severity": "HIGH",
+    "cvss": "7.8",
+    "mitigation": "Update to kernel 5.1.18 or later",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2019-13272"
+  },
+  {
+    "cve_id": "CVE-2020-8835",
+    "name": "eBPF verifier OOB read/write",
+    "description": "Linux kernel 5.5.x through 5.5.7 has a heap-based OOB write in the eBPF verifier, allowing local privilege escalation.",
+    "affected_kernel_min": "5.5.0",
+    "affected_kernel_max": "5.5.7",
+    "affected_component": "Linux kernel eBPF verifier",
+    "severity": "HIGH",
+    "cvss": "7.8",
+    "mitigation": "Update to kernel 5.5.8 or later",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2020-8835"
+  },
+  {
+    "cve_id": "CVE-2021-33909",
+    "name": "Sequoia fs/seq_file",
+    "description": "fs/seq_file.c in the Linux kernel through 5.13.3 allows local users to gain privileges via very large write operations to the /proc/<pid>/attr files.",
+    "affected_kernel_max": "5.13.3",
+    "affected_component": "Linux kernel seq_file",
+    "severity": "HIGH",
+    "cvss": "7.8",
+    "mitigation": "Update to kernel 5.13.4 or later",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2021-33909"
+  },
+  {
+    "cve_id": "CVE-2022-25636",
+    "name": "nft_fwd_dup_netdev_offload heap OOB",
+    "description": "An out-of-bounds write in the nft_fwd_dup_netdev_offload function in net/netfilter/nft_fwd_dup.c allows local users to escalate privileges.",
+    "affected_kernel_min": "5.4.0",
+    "affected_kernel_max": "5.16.999",
+    "affected_component": "Linux kernel netfilter",
+    "severity": "HIGH",
+    "cvss": "7.8",
+    "mitigation": "Update to kernel 5.17 or later; apply vendor patches",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2022-25636"
+  },
+  {
+    "cve_id": "CVE-2023-0386",
+    "name": "OverlayFS FUSE privilege escalation",
+    "description": "A flaw was found in the Linux kernel with the OverlayFS subsystem when copying files from an unconfined FUSE file system. Unprivileged users may use this flaw for local privilege escalation.",
+    "affected_kernel_max": "6.1.999",
+    "affected_component": "Linux kernel OverlayFS",
+    "severity": "HIGH",
+    "cvss": "7.8",
+    "mitigation": "Update to kernel 6.2 or later; apply distribution patches",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2023-0386"
+  },
+  {
+    "cve_id": "CVE-2017-1000112",
+    "name": "UFO packet corruption",
+    "description": "Linux kernel since 2.6.x can cause memory corruption when a UFO packet is built and then fragmented, allowing local privilege escalation.",
+    "affected_kernel_max": "4.13.999",
+    "affected_component": "Linux kernel UDP Fragmentation Offload",
+    "severity": "HIGH",
+    "cvss": "7.0",
+    "mitigation": "Update to kernel 4.14 or later",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2017-1000112"
+  },
+  {
+    "cve_id": "CVE-2015-1328",
+    "name": "OverlayFS incorrect permission check",
+    "description": "The overlayfs implementation in the linux kernel through 3.19.1 does not properly check permissions, allowing local users to gain privileges by leveraging user namespace usage.",
+    "affected_kernel_max": "3.19.1",
+    "affected_component": "Linux kernel OverlayFS",
+    "severity": "HIGH",
+    "cvss": "7.2",
+    "mitigation": "Update to kernel 4.0 or later; apply distribution patches",
+    "reference": "https://nvd.nist.gov/vuln/detail/CVE-2015-1328"
+  }
+]

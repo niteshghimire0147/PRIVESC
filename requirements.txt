@@ -1,0 +1,11 @@
+# Linux Privilege Escalation Automation Toolkit
+# Python 3.6+ required
+# No external dependencies — uses Python standard library only.
+#
+# Standard library modules used:
+#   subprocess, os, stat, re, json, glob, argparse, sys, time,
+#   datetime, platform, getpass
+#
+# To run:
+#   python3 main.py
+#   python3 main.py --help
