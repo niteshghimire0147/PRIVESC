@@ -1,0 +1,3270 @@
+<!DOCTYPE html>
+<!-- saved from url=(0065)http://192.168.194.130:4000/privesc_attacker_20260412_020647.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrivEsc Report — attacker — 2026-04-12 02:06:47</title>
+  <style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #0d1117;
+    color: #c9d1d9;
+    line-height: 1.6;
+}
+
+/* ── Layout ── */
+.container { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+
+/* ── Banner ── */
+.banner {
+    background: linear-gradient(135deg, #161b22 0%, #1a1f2e 100%);
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.banner h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #58a6ff;
+    margin-bottom: 6px;
+}
+.banner .subtitle { font-size: 0.85rem; color: #8b949e; }
+.banner .meta { text-align: right; font-size: 0.83rem; color: #8b949e; line-height: 1.9; }
+.banner .meta span { color: #c9d1d9; font-weight: 600; }
+
+/* ── Risk Level Badge ── */
+.risk-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    margin-top: 8px;
+}
+.risk-CRITICAL { background: #3d0f0f; color: #ff6b6b; border: 1px solid #ff4444; }
+.risk-HIGH     { background: #2d1f00; color: #ffb347; border: 1px solid #ff8c00; }
+.risk-MEDIUM   { background: #1a1f3d; color: #79b8ff; border: 1px solid #388bfd; }
+.risk-LOW      { background: #0f2d1a; color: #56d364; border: 1px solid #3fb950; }
+
+/* ── Summary Cards ── */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+@media (max-width: 700px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+}
+.card .count {
+    font-size: 2.8rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+.card .label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: #8b949e; }
+.card.critical .count { color: #ff6b6b; }
+.card.critical { border-color: #3d1515; }
+.card.high .count    { color: #ffb347; }
+.card.high    { border-color: #3d2800; }
+.card.medium .count  { color: #79b8ff; }
+.card.medium  { border-color: #1a2a4d; }
+.card.low .count     { color: #56d364; }
+.card.low     { border-color: #1a3a25; }
+
+/* ── Section Headings ── */
+.section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #58a6ff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 28px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #21262d;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── Category Table ── */
+.cat-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+}
+.cat-table th {
+    background: #21262d;
+    color: #8b949e;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    padding: 12px 16px;
+    text-align: left;
+}
+.cat-table th.num, .cat-table td.num { text-align: center; }
+.cat-table td {
+    padding: 11px 16px;
+    border-top: 1px solid #21262d;
+    color: #c9d1d9;
+}
+.cat-table tr:hover td { background: #1c2128; }
+.cat-table .n-critical { color: #ff6b6b; font-weight: 700; }
+.cat-table .n-high     { color: #ffb347; font-weight: 700; }
+.cat-table .n-medium   { color: #79b8ff; }
+.cat-table .n-low      { color: #56d364; }
+.cat-table .n-zero     { color: #484f58; }
+
+/* ── Severity Badges ── */
+.badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.sev-critical { background: #3d0f0f; color: #ff6b6b; border: 1px solid #7d1f1f; }
+.sev-high     { background: #2d1f00; color: #ffb347; border: 1px solid #7d4800; }
+.sev-medium   { background: #1a1f3d; color: #79b8ff; border: 1px solid #2a4fa8; }
+.sev-low      { background: #0f2d1a; color: #56d364; border: 1px solid #1f6b3a; }
+
+/* ── Finding Cards ── */
+.finding {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+.finding-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    flex-wrap: wrap;
+}
+.finding-header:hover { background: #1c2128; }
+.finding-num { color: #484f58; font-size: 0.8rem; min-width: 38px; }
+.finding-title { font-weight: 600; color: #c9d1d9; flex: 1; font-size: 0.92rem; }
+.finding-path {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.78rem;
+    color: #8b949e;
+    max-width: 380px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.toggle-icon { color: #484f58; font-size: 0.8rem; margin-left: 8px; transition: transform 0.2s; }
+.finding.open .toggle-icon { transform: rotate(180deg); }
+
+.finding-body {
+    display: none;
+    padding: 0 16px 16px;
+    border-top: 1px solid #21262d;
+}
+.finding.open .finding-body { display: block; }
+
+.field-grid {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 4px 12px;
+    margin: 12px 0;
+    font-size: 0.875rem;
+}
+.field-label { color: #8b949e; font-weight: 600; padding-top: 1px; }
+.field-value {
+    color: #c9d1d9;
+    font-family: 'Consolas', 'Courier New', monospace;
+    word-break: break-all;
+}
+.field-value.plain { font-family: inherit; }
+
+.subsection {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-top: 10px;
+    font-size: 0.875rem;
+}
+.subsection-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+}
+.subsection-title.desc   { color: #8b949e; }
+.subsection-title.exploit { color: #ff6b6b; }
+.subsection-title.fix    { color: #56d364; }
+
+pre {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.83rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: #c9d1d9;
+    margin: 0;
+}
+
+.tag {
+    display: inline-block;
+    background: #21262d;
+    color: #8b949e;
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 0.72rem;
+    margin-right: 4px;
+}
+.tag.yes { background: #2d1f00; color: #ffb347; }
+
+/* ── System Info Table ── */
+.sys-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    font-size: 0.875rem;
+}
+.sys-table td { padding: 9px 16px; border-top: 1px solid #21262d; }
+.sys-table tr:first-child td { border-top: none; }
+.sys-table .key { color: #8b949e; font-weight: 600; width: 200px; }
+.sys-table .val {
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #c9d1d9;
+}
+
+/* ── Shell Users Table ── */
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.user-table th {
+    background: #21262d;
+    color: #8b949e;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 14px;
+    text-align: left;
+}
+.user-table td { padding: 9px 14px; border-top: 1px solid #21262d; font-family: monospace; }
+.user-table tr:hover td { background: #1c2128; }
+
+/* ── Footer ── */
+.footer {
+    margin-top: 40px;
+    padding: 16px;
+    border-top: 1px solid #21262d;
+    text-align: center;
+    font-size: 0.78rem;
+    color: #484f58;
+}
+
+/* ── Print styles ── */
+@media print {
+    body { background: white; color: black; }
+    .container { max-width: 100%; }
+    .finding-body { display: block !important; }
+    .toggle-icon { display: none; }
+    .banner, .card, .finding, .cat-table, .sys-table, .user-table {
+        border: 1px solid #ccc !important;
+        background: white !important;
+        color: black !important;
+        break-inside: avoid;
+    }
+    .section-title { color: #1a1a2e !important; border-bottom: 2px solid #ccc !important; }
+    .badge { border: 1px solid #aaa !important; color: black !important; background: #f0f0f0 !important; }
+    .count { color: black !important; }
+    pre { background: #f5f5f5; padding: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="banner">
+  <div>
+    <h1>🛡 Linux Privilege Escalation Scanner</h1>
+    <div class="subtitle">Detection-only | Authorised security testing &amp; education</div>
+    <div class="risk-badge risk-CRITICAL">CRITICAL RISK</div>
+  </div>
+  <div class="meta">
+    <div>Generated &nbsp;<span>2026-04-12 02:06:47</span></div>
+    <div>Host &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>attacker</span></div>
+    <div>User &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>root</span>
+         &nbsp;<span style="color:#ff6b6b">ROOT ⚠</span></div>
+    <div>Kernel &nbsp;&nbsp;&nbsp;&nbsp;<span>6.12.25-amd64</span></div>
+    <div>OS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>Kali GNU/Linux Rolling</span></div>
+    <div>Risk Score <span>254</span></div>
+  </div>
+</div>
+<div class="summary-grid">
+  <div class="card critical">
+    <div class="count">6</div>
+    <div class="label">🔴 Critical</div>
+  </div>
+  <div class="card high">
+    <div class="count">5</div>
+    <div class="label">🟠 High</div>
+  </div>
+  <div class="card medium">
+    <div class="count">66</div>
+    <div class="label">🟡 Medium</div>
+  </div>
+  <div class="card low">
+    <div class="count">37</div>
+    <div class="label">🟢 Low</div>
+  </div>
+</div>
+<div class="section-title">💻 System Information</div>
+<table class="sys-table"><tbody><tr><td class="key">Hostname</td><td class="val">attacker</td></tr>
+<tr><td class="key">Current User</td><td class="val">root</td></tr>
+<tr><td class="key">User ID (id)</td><td class="val">uid=0(root) gid=0(root) groups=0(root)</td></tr>
+<tr><td class="key">Kernel Release</td><td class="val">6.12.25-amd64</td></tr>
+<tr><td class="key">Kernel Full</td><td class="val">Linux attacker 6.12.25-amd64 #1 SMP PREEMPT_DYNAMIC Kali 6.12.25-1kali1 (2025-04-30) x86_64 GNU/Linux</td></tr>
+<tr><td class="key">OS</td><td class="val">Kali GNU/Linux Rolling</td></tr>
+<tr><td class="key">OS Version</td><td class="val">2025.2</td></tr>
+<tr><td class="key">Home Directory</td><td class="val">/root</td></tr>
+<tr><td class="key">PATH</td><td class="val">/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games</td></tr>
+<tr><td class="key">Sudo Version</td><td class="val">Sudo version 1.9.16p2</td></tr>
+</tbody></table>
+<div class="section-title">👤 Users with Shell Access</div>
+<table class="user-table">
+  <thead><tr><th>UID</th><th>Username</th><th>Shell</th></tr></thead>
+  <tbody><tr><td>0</td><td>root</td><td>/usr/bin/zsh</td></tr><tr><td>114</td><td>postgres</td><td>/bin/bash</td></tr><tr><td>1000</td><td>attacker</td><td>/usr/bin/zsh</td></tr></tbody>
+</table>
+<div class="section-title">📊 Findings by Category</div>
+<table class="cat-table">
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th class="num">Critical</th>
+      <th class="num">High</th>
+      <th class="num">Medium</th>
+      <th class="num">Low</th>
+      <th class="num">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>SUID/SGID Binary</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-low">36</td>
+      <td class="num" style="font-weight:600">36</td>
+    </tr>
+    <tr>
+      <td>Misconfigured Service</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-high">2</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-zero">—</td>
+      <td class="num" style="font-weight:600">2</td>
+    </tr>
+    <tr>
+      <td>Kernel Security</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-high">1</td>
+      <td class="num n-medium">1</td>
+      <td class="num n-low">1</td>
+      <td class="num" style="font-weight:600">3</td>
+    </tr>
+    <tr>
+      <td>Credentials</td>
+      <td class="num n-critical">6</td>
+      <td class="num n-high">2</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-zero">—</td>
+      <td class="num" style="font-weight:600">8</td>
+    </tr>
+    <tr>
+      <td>PATH Hijacking</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-medium">65</td>
+      <td class="num n-zero">—</td>
+      <td class="num" style="font-weight:600">65</td>
+    </tr>
+  </tbody>
+</table>
+<div class="section-title">🔍 Detailed Findings (114 total)</div>
+
+<div style="margin-bottom:10px;text-align:right;">
+  <button onclick="expandAll()" style="background:#21262d;color:#8b949e;border:1px solid #30363d;
+    border-radius:6px;padding:5px 14px;cursor:pointer;font-size:0.82rem;margin-right:6px;">
+    Expand All
+  </button>
+  <button onclick="collapseAll()" style="background:#21262d;color:#8b949e;border:1px solid #30363d;
+    border-radius:6px;padding:5px 14px;cursor:pointer;font-size:0.82rem;">
+    Collapse All
+  </button>
+</div>
+
+<div class="finding open" data-sev="CRITICAL">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#001</span>
+  <span class="badge sev-critical">🔴 CRITICAL</span>
+  <span class="finding-title">Credentials › Hardcoded Credential in Config</span>
+  <span class="finding-path">/etc/cloud/cloud.cfg.d/20_kali.cfg</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/etc/cloud/cloud.cfg.d/20_kali.cfg</div>
+<div class="field-label">Permissions</div><div class="field-value">0o644</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Hardcoded credentials detected in config file:
+
+  Line 8 [Password in config]: lock_passwd: True
+  Line 11 [Password in config]: sudo: ["ALL=(ALL) NOPASSWD:ALL"]</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Replace hardcoded credentials with environment variables or
+a secrets management solution.
+Restrict file permissions: chmod 640 /etc/cloud/cloud.cfg.d/20_kali.cfg</pre>
+</div>
+  </div>
+</div>
+<div class="finding open" data-sev="CRITICAL">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#002</span>
+  <span class="badge sev-critical">🔴 CRITICAL</span>
+  <span class="finding-title">Credentials › Hardcoded Credential in Config</span>
+  <span class="finding-path">/etc/legion.conf</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/etc/legion.conf</div>
+<div class="field-label">Permissions</div><div class="field-value">0o644</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Hardcoded credentials detected in config file:
+
+  Line 2 [Password in config]: default-password=password</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Replace hardcoded credentials with environment variables or
+a secrets management solution.
+Restrict file permissions: chmod 640 /etc/legion.conf</pre>
+</div>
+  </div>
+</div>
+<div class="finding open" data-sev="CRITICAL">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#003</span>
+  <span class="badge sev-critical">🔴 CRITICAL</span>
+  <span class="finding-title">Credentials › Hardcoded Credential in Config</span>
+  <span class="finding-path">/etc/nsswitch.conf</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/etc/nsswitch.conf</div>
+<div class="field-label">Permissions</div><div class="field-value">0o644</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Hardcoded credentials detected in config file:
+
+  Line 7 [Password in config]: passwd:         files systemd winbind</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Replace hardcoded credentials with environment variables or
+a secrets management solution.
+Restrict file permissions: chmod 640 /etc/nsswitch.conf</pre>
+</div>
+  </div>
+</div>
+<div class="finding open" data-sev="CRITICAL">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#004</span>
+  <span class="badge sev-critical">🔴 CRITICAL</span>
+  <span class="finding-title">Credentials › Hardcoded Credential in Config</span>
+  <span class="finding-path">/etc/redsocks.conf</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/etc/redsocks.conf</div>
+<div class="field-label">Permissions</div><div class="field-value">0o644</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Hardcoded credentials detected in config file:
+
+  Line 55 [Password in config]: // password = "baz";
+  Line 69 [Password in config]: password = pazzw0rd;</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Replace hardcoded credentials with environment variables or
+a secrets management solution.
+Restrict file permissions: chmod 640 /etc/redsocks.conf</pre>
+</div>
+  </div>
+</div>
+<div class="finding open" data-sev="CRITICAL">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#005</span>
+  <span class="badge sev-critical">🔴 CRITICAL</span>
+  <span class="finding-title">Credentials › Hardcoded Credential in Config</span>
+  <span class="finding-path">/etc/samba/smb.conf</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/etc/samba/smb.conf</div>
+<div class="field-label">Permissions</div><div class="field-value">0o644</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Hardcoded credentials detected in config file:
+
+  Line 95 [Password in config]: passwd chat = *Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n\n *password\supdated\ssuccessfully* .</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Replace hardcoded credentials with environment variables or
+a secrets management solution.
+Restrict file permissions: chmod 640 /etc/samba/smb.conf</pre>
+</div>
+  </div>
+</div>
+<div class="finding open" data-sev="CRITICAL">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#006</span>
+  <span class="badge sev-critical">🔴 CRITICAL</span>
+  <span class="finding-title">Credentials › Hardcoded Credential in Config</span>
+  <span class="finding-path">/etc/unicornscan/modules.conf</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/etc/unicornscan/modules.conf</div>
+<div class="field-label">Permissions</div><div class="field-value">0o644</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Hardcoded credentials detected in config file:
+
+  Line 3 [Password in config]: dbconf:		"user=scan password=scanit! host=localhost dbname=scan";
+  Line 9 [Password in config]: password:	"scanit!";</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Replace hardcoded credentials with environment variables or
+a secrets management solution.
+Restrict file permissions: chmod 640 /etc/unicornscan/modules.conf</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#007</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Misconfigured Service › Missing Service Binary</span>
+  <span class="finding-path">/etc/rc.local</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/etc/rc.local</div>
+<div class="field-label">Service</div><div class="field-value">rc-local.service</div>
+<div class="field-label">Service File</div><div class="field-value">/lib/systemd/system/rc-local.service</div>
+<div class="field-label">Runs As</div><div class="field-value">root</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service rc-local.service references binary /etc/rc.local which does not exist. An attacker could create this file to gain code execution as root.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Create the missing binary at /etc/rc.local with correct permissions,
+  OR disable the service: systemctl disable rc-local</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#008</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Misconfigured Service › Missing Service Binary</span>
+  <span class="finding-path">/usr/sbin/quotaon</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/sbin/quotaon</div>
+<div class="field-label">Service</div><div class="field-value">quotaon-root.service</div>
+<div class="field-label">Service File</div><div class="field-value">/lib/systemd/system/quotaon-root.service</div>
+<div class="field-label">Runs As</div><div class="field-value">root</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service quotaon-root.service references binary /usr/sbin/quotaon which does not exist. An attacker could create this file to gain code execution as root.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Create the missing binary at /usr/sbin/quotaon with correct permissions,
+  OR disable the service: systemctl disable quotaon-root</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#009</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Kernel Security › Weak Kernel Hardening</span>
+  <span class="finding-path">/proc/sys/kernel/yama/ptrace_scope</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/proc/sys/kernel/yama/ptrace_scope</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>ptrace scope restriction (Yama LSM) is set to 0 (recommended: 1). ptrace scope 0 allows any process to ptrace any other process, enabling memory inspection and code injection.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">🔗 Reference</div>
+  <pre>Linux kernel hardening documentation</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Restrict ptrace: echo 1 &gt; /proc/sys/kernel/yama/ptrace_scope
+  Persist: add 'kernel.yama.ptrace_scope=1' to /etc/sysctl.conf</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#010</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Credentials › Group-Readable Shadow File</span>
+  <span class="finding-path">/etc/gshadow</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/etc/gshadow</div>
+<div class="field-label">Permissions</div><div class="field-value">0o640</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Group shadow file is group-readable.
+Members of the shadow group can read password hashes.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>chmod 640 /etc/gshadow  (group should be 'shadow')</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#011</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Credentials › Group-Readable Shadow File</span>
+  <span class="finding-path">/etc/shadow</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/etc/shadow</div>
+<div class="field-label">Permissions</div><div class="field-value">0o640</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Shadow password file is group-readable.
+Members of the shadow group can read password hashes.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>chmod 640 /etc/shadow  (group should be 'shadow')</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#012</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">Kernel Security › Weak Kernel Hardening</span>
+  <span class="finding-path">/proc/sys/kernel/kptr_restrict</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/proc/sys/kernel/kptr_restrict</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Kernel pointer restriction (kptr_restrict) is set to 0 (recommended: 2). When 0, kernel pointer values are exposed in /proc files, aiding exploit development.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">🔗 Reference</div>
+  <pre>Linux kernel hardening documentation</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Restrict kernel pointers: echo 2 &gt; /proc/sys/kernel/kptr_restrict
+  Persist: add 'kernel.kptr_restrict=2' to /etc/sysctl.conf</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#013</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/etc/systemd/system/dbus-org.freedesktop.timesync1.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/etc/systemd/system/dbus-org.freedesktop.timesync1.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: '!!/usr/lib/systemd/systemd-timesyncd'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for '!!/usr/lib/systemd/systemd-timesyncd' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#014</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/faraday.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/faraday.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'faraday-server'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'faraday-server' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#015</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/getty-static.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/getty-static.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#016</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/grub-common.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/grub-common.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'grub-editenv'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'grub-editenv' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#017</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/initrd-cleanup.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/initrd-cleanup.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#018</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/initrd-parse-etc.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/initrd-parse-etc.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#019</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/initrd-switch-root.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/initrd-switch-root.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#020</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/initrd-udevadm-cleanup-db.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/initrd-udevadm-cleanup-db.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'udevadm'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'udevadm' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#021</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/man-db.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/man-db.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: '+/usr/bin/install'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for '+/usr/bin/install' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#022</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/sshd-keygen.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/sshd-keygen.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'ssh-keygen'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'ssh-keygen' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#023</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/system-update-cleanup.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/system-update-cleanup.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'rm'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'rm' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#024</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-ask-password-console.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-ask-password-console.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-tty-ask-password-agent'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-tty-ask-password-agent' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#025</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-ask-password-wall.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-ask-password-wall.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-tty-ask-password-agent'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-tty-ask-password-agent' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#026</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-confext.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-confext.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-confext'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-confext' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#027</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-creds@.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-creds@.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-creds'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-creds' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#028</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-firstboot.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-firstboot.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-firstboot'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-firstboot' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#029</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-hwdb-update.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-hwdb-update.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-hwdb'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-hwdb' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#030</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-journal-catalog-update.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-journal-catalog-update.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'journalctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'journalctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#031</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-journal-flush.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-journal-flush.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'journalctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'journalctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#032</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-machine-id-commit.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-machine-id-commit.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-machine-id-setup'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-machine-id-setup' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#033</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-networkd-persistent-storage.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-networkd-persistent-storage.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'networkctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'networkctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#034</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-networkd.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-networkd.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: '!!/usr/lib/systemd/systemd-networkd'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for '!!/usr/lib/systemd/systemd-networkd' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#035</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-sysext.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-sysext.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-sysext'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-sysext' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#036</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-sysext@.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-sysext@.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-sysext'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-sysext' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#037</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-sysusers.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-sysusers.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-sysusers'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-sysusers' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#038</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-timesyncd.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-timesyncd.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: '!!/usr/lib/systemd/systemd-timesyncd'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for '!!/usr/lib/systemd/systemd-timesyncd' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#039</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-tmpfiles-clean.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-tmpfiles-clean.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-tmpfiles'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-tmpfiles' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#040</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-tmpfiles-setup-dev-early.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-tmpfiles-setup-dev-early.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-tmpfiles'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-tmpfiles' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#041</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-tmpfiles-setup-dev.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-tmpfiles-setup-dev.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-tmpfiles'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-tmpfiles' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#042</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-tmpfiles-setup.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-tmpfiles-setup.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-tmpfiles'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-tmpfiles' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#043</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-udev-load-credentials.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-udev-load-credentials.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'udevadm'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'udevadm' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#044</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-udev-settle.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-udev-settle.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'udevadm'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'udevadm' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#045</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/lib/systemd/system/systemd-udev-trigger.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/lib/systemd/system/systemd-udev-trigger.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'udevadm'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'udevadm' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#046</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/faraday.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/faraday.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'faraday-server'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'faraday-server' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#047</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/getty-static.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/getty-static.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#048</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/grub-common.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/grub-common.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'grub-editenv'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'grub-editenv' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#049</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/initrd-cleanup.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/initrd-cleanup.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#050</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/initrd-parse-etc.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/initrd-parse-etc.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#051</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/initrd-switch-root.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/initrd-switch-root.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#052</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/initrd-udevadm-cleanup-db.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/initrd-udevadm-cleanup-db.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'udevadm'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'udevadm' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#053</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/man-db.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/man-db.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: '+/usr/bin/install'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for '+/usr/bin/install' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#054</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/sshd-keygen.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/sshd-keygen.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'ssh-keygen'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'ssh-keygen' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#055</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/system-update-cleanup.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/system-update-cleanup.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'rm'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'rm' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#056</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-ask-password-console.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-ask-password-console.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-tty-ask-password-agent'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-tty-ask-password-agent' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#057</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-ask-password-wall.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-ask-password-wall.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-tty-ask-password-agent'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-tty-ask-password-agent' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#058</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-confext.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-confext.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-confext'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-confext' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#059</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-creds@.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-creds@.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-creds'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-creds' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#060</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-firstboot.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-firstboot.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-firstboot'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-firstboot' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#061</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-hwdb-update.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-hwdb-update.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-hwdb'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-hwdb' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#062</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-journal-catalog-update.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-journal-catalog-update.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'journalctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'journalctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#063</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-journal-flush.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-journal-flush.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'journalctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'journalctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#064</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-machine-id-commit.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-machine-id-commit.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-machine-id-setup'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-machine-id-setup' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#065</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-networkd-persistent-storage.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-networkd-persistent-storage.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'networkctl'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'networkctl' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#066</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-networkd.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-networkd.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: '!!/usr/lib/systemd/systemd-networkd'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for '!!/usr/lib/systemd/systemd-networkd' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#067</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-sysext.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-sysext.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-sysext'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-sysext' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#068</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-sysext@.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-sysext@.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-sysext'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-sysext' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#069</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-sysusers.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-sysusers.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-sysusers'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-sysusers' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#070</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-timesyncd.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-timesyncd.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: '!!/usr/lib/systemd/systemd-timesyncd'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for '!!/usr/lib/systemd/systemd-timesyncd' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#071</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-tmpfiles-clean.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-tmpfiles-clean.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-tmpfiles'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-tmpfiles' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#072</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-tmpfiles-setup-dev-early.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-tmpfiles-setup-dev-early.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-tmpfiles'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-tmpfiles' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#073</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-tmpfiles-setup-dev.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-tmpfiles-setup-dev.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-tmpfiles'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-tmpfiles' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#074</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-tmpfiles-setup.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-tmpfiles-setup.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'systemd-tmpfiles'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'systemd-tmpfiles' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#075</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-udev-load-credentials.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-udev-load-credentials.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'udevadm'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'udevadm' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#076</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-udev-settle.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-udev-settle.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'udevadm'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'udevadm' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#077</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">PATH Hijacking › Relative ExecStart in Service File</span>
+  <span class="finding-path">/usr/lib/systemd/system/systemd-udev-trigger.service</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/lib/systemd/system/systemd-udev-trigger.service</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Service ExecStart uses a relative path: 'udevadm'
+Command resolution depends on the service's PATH, which may
+be manipulated if the service has an unsafe Environment=PATH.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Use the absolute path for 'udevadm' in ExecStart=.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#078</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SGID Binary</span>
+  <span class="finding-path">/usr/bin/chage</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/chage</div>
+<div class="field-label">Bit Type</div><div class="field-value">SGID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SGID bit set.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SGID bit if not required: chmod g-s /usr/bin/chage
+  Verify the binary needs group-level access for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#079</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/chfn</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/chfn</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/chfn
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#080</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/chsh</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/chsh</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/chsh
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#081</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SGID Binary</span>
+  <span class="finding-path">/usr/bin/crontab</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/crontab</div>
+<div class="field-label">Bit Type</div><div class="field-value">SGID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SGID bit set.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SGID bit if not required: chmod g-s /usr/bin/crontab
+  Verify the binary needs group-level access for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#082</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SGID Binary</span>
+  <span class="finding-path">/usr/bin/dotlockfile</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/dotlockfile</div>
+<div class="field-label">Bit Type</div><div class="field-value">SGID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SGID bit set.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SGID bit if not required: chmod g-s /usr/bin/dotlockfile
+  Verify the binary needs group-level access for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#083</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SGID Binary</span>
+  <span class="finding-path">/usr/bin/expiry</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/expiry</div>
+<div class="field-label">Bit Type</div><div class="field-value">SGID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SGID bit set.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SGID bit if not required: chmod g-s /usr/bin/expiry
+  Verify the binary needs group-level access for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#084</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/fusermount3</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/fusermount3</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/fusermount3
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#085</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/gpasswd</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/gpasswd</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/gpasswd
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#086</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/kismet_cap_hak5_wifi_coconut</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/kismet_cap_hak5_wifi_coconut</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/kismet_cap_hak5_wifi_coconut
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#087</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/kismet_cap_linux_bluetooth</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/kismet_cap_linux_bluetooth</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/kismet_cap_linux_bluetooth
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#088</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/kismet_cap_linux_wifi</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/kismet_cap_linux_wifi</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/kismet_cap_linux_wifi
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#089</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/kismet_cap_nrf_51822</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/kismet_cap_nrf_51822</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/kismet_cap_nrf_51822
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#090</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/kismet_cap_nrf_52840</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/kismet_cap_nrf_52840</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/kismet_cap_nrf_52840
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#091</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/kismet_cap_nrf_mousejack</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/kismet_cap_nrf_mousejack</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/kismet_cap_nrf_mousejack
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#092</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/kismet_cap_nxp_kw41z</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/kismet_cap_nxp_kw41z</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/kismet_cap_nxp_kw41z
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#093</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/kismet_cap_rz_killerbee</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/kismet_cap_rz_killerbee</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/kismet_cap_rz_killerbee
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#094</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/kismet_cap_ti_cc_2531</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/kismet_cap_ti_cc_2531</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/kismet_cap_ti_cc_2531
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#095</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/kismet_cap_ti_cc_2540</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/kismet_cap_ti_cc_2540</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/kismet_cap_ti_cc_2540
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#096</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/kismet_cap_ubertooth_one</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/kismet_cap_ubertooth_one</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/kismet_cap_ubertooth_one
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#097</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/mount</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/mount</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/mount
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#098</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/newgrp</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/newgrp</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/newgrp
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#099</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/ntfs-3g</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/ntfs-3g</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/ntfs-3g
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#100</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/passwd</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/passwd</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/passwd
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#101</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/pkexec</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/pkexec</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/pkexec
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#102</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SGID Binary</span>
+  <span class="finding-path">/usr/bin/plocate</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/plocate</div>
+<div class="field-label">Bit Type</div><div class="field-value">SGID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SGID bit set.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SGID bit if not required: chmod g-s /usr/bin/plocate
+  Verify the binary needs group-level access for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#103</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/rsh-redone-rlogin</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/rsh-redone-rlogin</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/rsh-redone-rlogin
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#104</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/rsh-redone-rsh</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/rsh-redone-rsh</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/rsh-redone-rsh
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#105</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SGID Binary</span>
+  <span class="finding-path">/usr/bin/ssh-agent</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/ssh-agent</div>
+<div class="field-label">Bit Type</div><div class="field-value">SGID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SGID bit set.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SGID bit if not required: chmod g-s /usr/bin/ssh-agent
+  Verify the binary needs group-level access for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#106</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/su</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/su</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/su
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#107</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/sudo</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/sudo</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/sudo
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#108</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/umount</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/umount</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/umount
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#109</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/bin/vmware-user-suid-wrapper</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/bin/vmware-user-suid-wrapper</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/bin/vmware-user-suid-wrapper
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#110</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/sbin/mount.cifs</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/sbin/mount.cifs</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/sbin/mount.cifs
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#111</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/sbin/mount.nfs</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/sbin/mount.nfs</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/sbin/mount.nfs
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#112</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SUID Binary</span>
+  <span class="finding-path">/usr/sbin/pppd</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/sbin/pppd</div>
+<div class="field-label">Bit Type</div><div class="field-value">SUID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SUID bit but no known GTFOBins exploit path.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SUID bit if not required: chmod u-s /usr/sbin/pppd
+  Audit whether this binary needs elevated privileges for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#113</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">SUID/SGID Binary › SGID Binary</span>
+  <span class="finding-path">/usr/sbin/unix_chkpwd</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/usr/sbin/unix_chkpwd</div>
+<div class="field-label">Bit Type</div><div class="field-value">SGID</div>
+<div class="field-label">In GTFOBins</div><div class="field-value plain"><span class="tag ">No</span></div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>Binary has SGID bit set.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SGID bit if not required: chmod g-s /usr/sbin/unix_chkpwd
+  Verify the binary needs group-level access for its function.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#114</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">Kernel Security › Weak Kernel Hardening</span>
+  <span class="finding-path">/proc/sys/kernel/dmesg_restrict</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">/proc/sys/kernel/dmesg_restrict</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">📋 Description</div>
+  <pre>dmesg restriction is set to 0 (recommended: 1). When set to 0, unprivileged users can read kernel messages which may leak addresses.</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title desc">🔗 Reference</div>
+  <pre>Linux kernel hardening documentation</pre>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Restrict dmesg: echo 1 &gt; /proc/sys/kernel/dmesg_restrict
+  Persist: add 'kernel.dmesg_restrict=1' to /etc/sysctl.conf</pre>
+</div>
+  </div>
+</div>
+<div class="footer">
+  Linux Privilege Escalation Automation Toolkit &nbsp;|&nbsp;
+  For authorised security testing and educational purposes only &nbsp;|&nbsp;
+  Generated 2026-04-12 02:06:47
+</div>
+</div>
+<script>
+function toggleFinding(el) {
+    el.closest('.finding').classList.toggle('open');
+}
+function expandAll() {
+    document.querySelectorAll('.finding').forEach(f => f.classList.add('open'));
+}
+function collapseAll() {
+    document.querySelectorAll('.finding').forEach(f => f.classList.remove('open'));
+    window.scrollTo(0, 0);
+}
+// Auto-expand CRITICAL findings
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.finding[data-sev="CRITICAL"]').forEach(f => f.classList.add('open'));
+});
+</script>
+
+</body></html>
