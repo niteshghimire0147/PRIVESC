@@ -163,62 +163,61 @@ def init_db():
 
 async def _intel_update_worker(verbose: bool = False) -> bool:
     """Run threat intel update and refresh _intel_state. Thread-safe."""
+    # Guard: only one update at a time (no lock held during the long fetch)
     if _intel_state["status"] == "updating":
         return False
-    async with _intel_lock:
-        import time as _time
-        _intel_state["status"] = "updating"
-        _intel_state["error"]  = None
-        _intel_state["progress"] = {
-            "step": 0, "total_steps": 4, "step_name": "Starting…",
-            "cves_done": 0, "cves_total": 0,
-            "started_at": _time.monotonic(), "eta_seconds": None,
-        }
+    _intel_state["status"] = "updating"
+    _intel_state["error"]  = None
 
-        def _on_progress(step, total_steps, step_name, cves_done, cves_total):
-            """Called from the worker thread — updates shared state."""
-            prog = _intel_state["progress"]
-            prog["step"]       = step
-            prog["total_steps"] = total_steps
-            prog["step_name"]  = step_name
-            prog["cves_done"]  = cves_done
-            prog["cves_total"] = cves_total
-            # ETA: extrapolate from elapsed / fraction done
-            elapsed = _time.monotonic() - (prog["started_at"] or _time.monotonic())
-            # weight: each step counts equally among 4; cves weight the NVD/CVE.org steps
-            steps_done_frac = (step - 1) / total_steps
-            if cves_total > 0:
-                steps_done_frac += (cves_done / cves_total) / total_steps
-            if steps_done_frac > 0.02:
-                eta = elapsed / steps_done_frac * (1 - steps_done_frac)
-                prog["eta_seconds"] = round(eta)
-            else:
-                prog["eta_seconds"] = None
+    import time as _time
+    _intel_state["progress"] = {
+        "step": 0, "total_steps": 4, "step_name": "Starting…",
+        "cves_done": 0, "cves_total": 0,
+        "started_at": _time.monotonic(), "eta_seconds": None,
+    }
 
-        try:
-            from intelligence.threat_intel import ThreatIntelFeed, _load_cache
-            feed = ThreatIntelFeed()
-            ok   = await asyncio.get_event_loop().run_in_executor(
-                None, lambda: feed.update(verbose=verbose, progress_callback=_on_progress)
-            )
-            cache = _load_cache()
-            cves  = cache.get("cve_details", {})
-            kev   = cache.get("kev_cves", [])
-            cveorg_count = sum(1 for v in cves.values() if v.get("cwe_ids"))
-            _intel_state["last_updated"]   = cache.get("last_updated")
-            _intel_state["cve_count"]      = len(cves)
-            _intel_state["kev_count"]      = len(kev)
-            _intel_state["cveorg_count"]   = cveorg_count
-            _intel_state["status"]         = "done" if ok else "error"
-            _intel_state["error"]          = None if ok else "APIs unavailable (offline?)"
-            # mark progress complete
-            _intel_state["progress"]["step"] = 4
-            _intel_state["progress"]["step_name"] = "Complete"
-            return ok
-        except Exception as e:
-            _intel_state["status"] = "error"
-            _intel_state["error"]  = str(e)
-            return False
+    def _on_progress(step, total_steps, step_name, cves_done, cves_total):
+        """Called from the worker thread — updates shared state directly."""
+        prog = _intel_state["progress"]
+        prog["step"]        = step
+        prog["total_steps"] = total_steps
+        prog["step_name"]   = step_name
+        prog["cves_done"]   = cves_done
+        prog["cves_total"]  = cves_total
+        elapsed = _time.monotonic() - (prog["started_at"] or _time.monotonic())
+        steps_done_frac = (step - 1) / total_steps
+        if cves_total > 0:
+            steps_done_frac += (cves_done / cves_total) / total_steps
+        if steps_done_frac > 0.02:
+            prog["eta_seconds"] = round(elapsed / steps_done_frac * (1 - steps_done_frac))
+        else:
+            prog["eta_seconds"] = None
+
+    try:
+        from intelligence.threat_intel import ThreatIntelFeed, _load_cache
+        feed = ThreatIntelFeed()
+        # Run blocking I/O in a thread — lock is NOT held so status polls work freely
+        loop = asyncio.get_event_loop()
+        ok   = await loop.run_in_executor(
+            None, lambda: feed.update(verbose=verbose, progress_callback=_on_progress)
+        )
+        cache        = _load_cache()
+        cves         = cache.get("cve_details", {})
+        kev          = cache.get("kev_cves", [])
+        cveorg_count = sum(1 for v in cves.values() if v.get("cwe_ids"))
+        _intel_state["last_updated"] = cache.get("last_updated")
+        _intel_state["cve_count"]    = len(cves)
+        _intel_state["kev_count"]    = len(kev)
+        _intel_state["cveorg_count"] = cveorg_count
+        _intel_state["status"]       = "done" if ok else "error"
+        _intel_state["error"]        = None if ok else "APIs unavailable — check network"
+        _intel_state["progress"]["step"]      = 4
+        _intel_state["progress"]["step_name"] = "Complete"
+        return ok
+    except Exception as e:
+        _intel_state["status"] = "error"
+        _intel_state["error"]  = str(e)
+        return False
 
 
 async def _daily_scheduler():
@@ -300,7 +299,7 @@ class CompareRequest(BaseModel):
 
 # ── Scanning Logic ────────────────────────────────────────────────────────────
 
-def _run_local_scan(scan_id: str, quick: bool, skip: str, verbose: bool):
+def _run_local_scan_sync(scan_id: str, quick: bool, skip: str, verbose: bool):
     """Run a local scan in a background thread and persist results."""
     conn = get_db()
     try:
@@ -353,6 +352,14 @@ def _run_local_scan(scan_id: str, quick: bool, skip: str, verbose: bool):
             paths = [p.to_dict() for p in analyse_attack_paths(findings)]
         except Exception:
             paths = []
+
+        # Enrich with threat intelligence (CVE enrichment from cached feed)
+        try:
+            from intelligence.threat_intel import ThreatIntelFeed
+            feed = ThreatIntelFeed()
+            findings = feed.enrich_findings(findings)
+        except Exception:
+            pass
 
         # Enrich with compliance
         try:
@@ -407,7 +414,7 @@ def _run_local_scan(scan_id: str, quick: bool, skip: str, verbose: bool):
         conn.close()
 
 
-def _run_ssh_scan(scan_id: str, req: RemoteSSHRequest):
+def _run_ssh_scan_sync(scan_id: str, req: RemoteSSHRequest):
     """Run a remote SSH scan in a background thread."""
     conn = get_db()
     try:
@@ -428,7 +435,13 @@ def _run_ssh_scan(scan_id: str, req: RemoteSSHRequest):
         from analysis.compliance_mapper import enrich_with_compliance
 
         analysed = analyse(findings)
-        enriched_findings = enrich_with_compliance(analysed.get("findings", findings))
+        # Enrich with threat intelligence
+        try:
+            from intelligence.threat_intel import ThreatIntelFeed
+            enriched_findings = ThreatIntelFeed().enrich_findings(analysed.get("findings", findings))
+        except Exception:
+            enriched_findings = analysed.get("findings", findings)
+        enriched_findings = enrich_with_compliance(enriched_findings)
         summary   = analysed.get("summary", {})
         paths     = [p.to_dict() for p in analyse_attack_paths(enriched_findings)]
         now       = datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -603,7 +616,10 @@ async def export_scan(scan_id: str, fmt: str):
         row = conn.execute("SELECT * FROM scans WHERE id=?", (scan_id,)).fetchone()
         if not row:
             raise HTTPException(404, "Scan not found")
-        data        = dict(row)
+        data = dict(row)
+        if data.get("status") != "completed":
+            raise HTTPException(400, f"Scan is not complete (status: {data.get('status')}). "
+                                     "Only completed scans can be exported.")
         system_info = json.loads(data.get("system_info") or "{}")
         findings    = json.loads(data.get("findings")    or "[]")
         summary     = json.loads(data.get("summary")     or "{}")
@@ -638,6 +654,11 @@ async def export_scan(scan_id: str, fmt: str):
 
         # ── TXT ───────────────────────────────────────────────
         if fmt == "txt":
+            if "findings_by_category" not in results:
+                from analysis.engine import analyse
+                full = analyse(findings)
+                full["findings"] = findings
+                results = full
             from reporter.generator import generate_text
             out = data_dir / f"export_{short_id}.txt"
             generate_text(system_info, results, output_file=str(out), use_color=False)
@@ -646,6 +667,11 @@ async def export_scan(scan_id: str, fmt: str):
 
         # ── PDF ───────────────────────────────────────────────
         if fmt == "pdf":
+            if "findings_by_category" not in results:
+                from analysis.engine import analyse
+                full = analyse(findings)
+                full["findings"] = findings
+                results = full
             out = data_dir / f"export_{short_id}.pdf"
             _generate_pdf(system_info, results, str(out))
             return FileResponse(str(out), media_type="application/pdf",
@@ -861,81 +887,19 @@ def _upsert_host(conn, hostname: str, platform: str, scan_id: str,
 
 
 async def _run_local_scan(scan_id: str) -> None:
-    """Background task: run a local privilege-escalation scan and store results."""
-    conn = get_db()
-    try:
-        from main import run_scan
-        results     = run_scan(quick=False)
-        system_info = results.get("system_info", {})
-        findings    = results.get("findings", [])
-        summary     = results.get("summary", {})
-        attack_paths = results.get("attack_paths", [])
-
-        hostname   = system_info.get("hostname", "unknown")
-        platform   = system_info.get("platform", "unknown")
-        risk_level = summary.get("risk_level", "LOW")
-        risk_score = summary.get("risk_score", 0)
-        now        = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-        conn.execute("""
-            UPDATE scans SET status=?, completed_at=?, hostname=?, platform=?,
-                risk_level=?, risk_score=?, system_info=?, findings=?, summary=?,
-                attack_paths=?
-            WHERE id=?
-        """, ("completed", now, hostname, platform, risk_level, risk_score,
-              json.dumps(system_info), json.dumps(findings),
-              json.dumps(summary), json.dumps(attack_paths), scan_id))
-        _upsert_host(conn, hostname, platform, scan_id, now, risk_level)
-        conn.commit()
-    except Exception as e:
-        conn.execute("UPDATE scans SET status=?, error_msg=? WHERE id=?",
-                     ("failed", str(e)[:500], scan_id))
-        conn.commit()
-    finally:
-        conn.close()
+    """Background task: run a local scan via subprocess and store results."""
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(
+        None, lambda: _run_local_scan_sync(scan_id, quick=False, skip="", verbose=False)
+    )
 
 
 async def _run_ssh_scan(scan_id: str, req: RemoteSSHRequest) -> None:
-    """Background task: run a remote SSH scan and store results."""
-    conn = get_db()
-    try:
-        from remote.ssh_scanner import RemoteScanError, scan_remote_host
-        results     = scan_remote_host(
-            host=req.host, username=req.username,
-            password=req.password, port=req.port,
-            key_path=req.key_path,
-        )
-        system_info  = results.get("system_info", {})
-        findings     = results.get("findings", [])
-        summary      = results.get("summary", {})
-        attack_paths = results.get("attack_paths", [])
-
-        hostname   = system_info.get("hostname", req.host)
-        platform   = system_info.get("platform", "linux")
-        risk_level = summary.get("risk_level", "LOW")
-        risk_score = summary.get("risk_score", 0)
-        now        = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-        conn.execute("""
-            UPDATE scans SET status=?, completed_at=?, hostname=?, platform=?,
-                risk_level=?, risk_score=?, system_info=?, findings=?, summary=?,
-                attack_paths=?
-            WHERE id=?
-        """, ("completed", now, hostname, platform, risk_level, risk_score,
-              json.dumps(system_info), json.dumps(findings),
-              json.dumps(summary), json.dumps(attack_paths), scan_id))
-        _upsert_host(conn, hostname, platform, scan_id, now, risk_level)
-        conn.commit()
-    except RemoteScanError as e:
-        conn.execute("UPDATE scans SET status=?, error_msg=? WHERE id=?",
-                     ("failed", f"SSH connection error: {e}"[:500], scan_id))
-        conn.commit()
-    except Exception as e:
-        conn.execute("UPDATE scans SET status=?, error_msg=? WHERE id=?",
-                     ("failed", str(e)[:500], scan_id))
-        conn.commit()
-    finally:
-        conn.close()
+    """Background task: run a remote SSH scan via executor and store results."""
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(
+        None, lambda: _run_ssh_scan_sync(scan_id, req)
+    )
 
 
 @app.post("/api/scans/local", status_code=202)
@@ -1146,12 +1110,21 @@ async def get_intel_cves():
         cves  = cache.get("cve_details", {})
         kev   = set(cache.get("kev_cves", []))
         rows  = []
+        def _derive_severity(score, stored):
+            if stored: return stored
+            if score is None: return ""
+            if score >= 9.0:   return "CRITICAL"
+            if score >= 7.0:   return "HIGH"
+            if score >= 4.0:   return "MEDIUM"
+            return "LOW"
+
         for cve_id, detail in sorted(cves.items()):
+            cvss = detail.get("cvss_score")
             rows.append({
                 "id":          cve_id,
                 "description": (detail.get("description") or "")[:200],
-                "cvss":        detail.get("cvss_score"),
-                "severity":    detail.get("severity", ""),
+                "cvss":        cvss,
+                "severity":    _derive_severity(cvss, detail.get("severity", "")),
                 "epss":        detail.get("epss_score"),
                 "in_kev":      cve_id in kev,
                 "cwe_ids":     detail.get("cwe_ids", []),
@@ -1165,17 +1138,14 @@ async def get_intel_cves():
 @app.post("/api/intel/update", status_code=202)
 async def trigger_intel_update(background_tasks: BackgroundTasks):
     """Manually trigger a threat intel update."""
-    async with _intel_lock:
-        if _intel_state["status"] == "updating":
-            raise HTTPException(status_code=409, detail="Update already in progress")
-        _intel_state["status"] = "updating"
-        _intel_state["error"]  = None
+    if _intel_state["status"] == "updating":
+        raise HTTPException(status_code=409, detail="Update already in progress")
     background_tasks.add_task(_intel_update_worker)
     return {"message": "Threat intel update started"}
 
 
 @app.post("/api/intel/interval")
 async def set_intel_interval(hours: int = Query(default=24, ge=1, le=168)):
-    """Set the auto-update interval (1–168 hours)."""
+    """Set the auto-update interval (1-168 hours)."""
     _intel_state["auto_interval_hours"] = hours
     return {"message": f"Auto-update interval set to {hours} hours"}

@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRIVESC Report â DESKTOP-OTS261O â 2026-05-09 09:43:35</title>
+  <style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #0d1117;
+    color: #c9d1d9;
+    line-height: 1.6;
+}
+
+/* ── Layout ── */
+.container { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+
+/* ── Banner ── */
+.banner {
+    background: linear-gradient(135deg, #161b22 0%, #1a1f2e 100%);
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.banner h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #58a6ff;
+    margin-bottom: 6px;
+}
+.banner .subtitle { font-size: 0.85rem; color: #8b949e; }
+.banner .meta { text-align: right; font-size: 0.83rem; color: #8b949e; line-height: 1.9; }
+.banner .meta span { color: #c9d1d9; font-weight: 600; }
+
+/* ── Risk Level Badge ── */
+.risk-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    margin-top: 8px;
+}
+.risk-CRITICAL { background: #3d0f0f; color: #ff6b6b; border: 1px solid #ff4444; }
+.risk-HIGH     { background: #2d1f00; color: #ffb347; border: 1px solid #ff8c00; }
+.risk-MEDIUM   { background: #1a1f3d; color: #79b8ff; border: 1px solid #388bfd; }
+.risk-LOW      { background: #0f2d1a; color: #56d364; border: 1px solid #3fb950; }
+
+/* ── Summary Cards ── */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+@media (max-width: 700px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+}
+.card .count {
+    font-size: 2.8rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+.card .label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: #8b949e; }
+.card.critical .count { color: #ff6b6b; }
+.card.critical { border-color: #3d1515; }
+.card.high .count    { color: #ffb347; }
+.card.high    { border-color: #3d2800; }
+.card.medium .count  { color: #79b8ff; }
+.card.medium  { border-color: #1a2a4d; }
+.card.low .count     { color: #56d364; }
+.card.low     { border-color: #1a3a25; }
+
+/* ── Section Headings ── */
+.section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #58a6ff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 28px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #21262d;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── Category Table ── */
+.cat-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+}
+.cat-table th {
+    background: #21262d;
+    color: #8b949e;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    padding: 12px 16px;
+    text-align: left;
+}
+.cat-table th.num, .cat-table td.num { text-align: center; }
+.cat-table td {
+    padding: 11px 16px;
+    border-top: 1px solid #21262d;
+    color: #c9d1d9;
+}
+.cat-table tr:hover td { background: #1c2128; }
+.cat-table .n-critical { color: #ff6b6b; font-weight: 700; }
+.cat-table .n-high     { color: #ffb347; font-weight: 700; }
+.cat-table .n-medium   { color: #79b8ff; }
+.cat-table .n-low      { color: #56d364; }
+.cat-table .n-zero     { color: #484f58; }
+
+/* ── Severity Badges ── */
+.badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.sev-critical { background: #3d0f0f; color: #ff6b6b; border: 1px solid #7d1f1f; }
+.sev-high     { background: #2d1f00; color: #ffb347; border: 1px solid #7d4800; }
+.sev-medium   { background: #1a1f3d; color: #79b8ff; border: 1px solid #2a4fa8; }
+.sev-low      { background: #0f2d1a; color: #56d364; border: 1px solid #1f6b3a; }
+
+/* ── Finding Cards ── */
+.finding {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+.finding-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    flex-wrap: wrap;
+}
+.finding-header:hover { background: #1c2128; }
+.finding-num { color: #484f58; font-size: 0.8rem; min-width: 38px; }
+.finding-title { font-weight: 600; color: #c9d1d9; flex: 1; font-size: 0.92rem; }
+.finding-path {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.78rem;
+    color: #8b949e;
+    max-width: 380px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.toggle-icon { color: #484f58; font-size: 0.8rem; margin-left: 8px; transition: transform 0.2s; }
+.finding.open .toggle-icon { transform: rotate(180deg); }
+
+.finding-body {
+    display: none;
+    padding: 0 16px 16px;
+    border-top: 1px solid #21262d;
+}
+.finding.open .finding-body { display: block; }
+
+.field-grid {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 4px 12px;
+    margin: 12px 0;
+    font-size: 0.875rem;
+}
+.field-label { color: #8b949e; font-weight: 600; padding-top: 1px; }
+.field-value {
+    color: #c9d1d9;
+    font-family: 'Consolas', 'Courier New', monospace;
+    word-break: break-all;
+}
+.field-value.plain { font-family: inherit; }
+
+.subsection {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-top: 10px;
+    font-size: 0.875rem;
+}
+.subsection-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+}
+.subsection-title.desc   { color: #8b949e; }
+.subsection-title.exploit { color: #ff6b6b; }
+.subsection-title.fix    { color: #56d364; }
+
+pre {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.83rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: #c9d1d9;
+    margin: 0;
+}
+
+.tag {
+    display: inline-block;
+    background: #21262d;
+    color: #8b949e;
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 0.72rem;
+    margin-right: 4px;
+}
+.tag.yes { background: #2d1f00; color: #ffb347; }
+
+/* ── System Info Table ── */
+.sys-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    font-size: 0.875rem;
+}
+.sys-table td { padding: 9px 16px; border-top: 1px solid #21262d; }
+.sys-table tr:first-child td { border-top: none; }
+.sys-table .key { color: #8b949e; font-weight: 600; width: 200px; }
+.sys-table .val {
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #c9d1d9;
+}
+
+/* ── Shell Users Table ── */
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.user-table th {
+    background: #21262d;
+    color: #8b949e;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 14px;
+    text-align: left;
+}
+.user-table td { padding: 9px 14px; border-top: 1px solid #21262d; font-family: monospace; }
+.user-table tr:hover td { background: #1c2128; }
+
+/* ── Footer ── */
+.footer {
+    margin-top: 40px;
+    padding: 16px;
+    border-top: 1px solid #21262d;
+    text-align: center;
+    font-size: 0.78rem;
+    color: #484f58;
+}
+
+/* ── Print styles ── */
+@media print {
+    body { background: white; color: black; }
+    .container { max-width: 100%; }
+    .finding-body { display: block !important; }
+    .toggle-icon { display: none; }
+    .banner, .card, .finding, .cat-table, .sys-table, .user-table {
+        border: 1px solid #ccc !important;
+        background: white !important;
+        color: black !important;
+        break-inside: avoid;
+    }
+    .section-title { color: #1a1a2e !important; border-bottom: 2px solid #ccc !important; }
+    .badge { border: 1px solid #aaa !important; color: black !important; background: #f0f0f0 !important; }
+    .count { color: black !important; }
+    pre { background: #f5f5f5; padding: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="banner">
+  <div>
+    <h1>🛡 PRIVESC — Windows Privilege Escalation Scanner</h1>
+    <div class="subtitle">Detection-only | Authorised security testing &amp; education</div>
+    <div class="risk-badge risk-CRITICAL">CRITICAL RISK</div>
+  </div>
+  <div class="meta">
+    <div>Generated &nbsp;<span>2026-05-09 09:43:35</span></div>
+    <div>Host &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>DESKTOP-OTS261O</span></div>
+    <div>User &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>Administrator</span>&nbsp;<span style="color:#ff6b6b">ADMIN ⚠</span></div>
+    <div>Kernel &nbsp;&nbsp;&nbsp;&nbsp;<span>26200</span></div>
+    <div>OS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>Microsoft Windows 11 Home 10.0.26200</span></div>
+    <div>Risk Score <span>98</span></div>
+  </div>
+</div>
+<div class="summary-grid">
+  <div class="card critical">
+    <div class="count">3</div>
+    <div class="label">🔴 Critical</div>
+  </div>
+  <div class="card high">
+    <div class="count">11</div>
+    <div class="label">🟠 High</div>
+  </div>
+  <div class="card medium">
+    <div class="count">5</div>
+    <div class="label">🟡 Medium</div>
+  </div>
+  <div class="card low">
+    <div class="count">3</div>
+    <div class="label">🟢 Low</div>
+  </div>
+</div>
+<div class="section-title">💻 System Information</div>
+<table class="sys-table"><tr><td class="key">Hostname</td><td class="val">DESKTOP-OTS261O</td></tr>
+<tr><td class="key">Current User</td><td class="val">Administrator</td></tr>
+<tr><td class="key">Kernel Release</td><td class="val">26200</td></tr>
+<tr><td class="key">OS</td><td class="val">Microsoft Windows 11 Home 10.0.26200</td></tr>
+<tr><td class="key">OS Version</td><td class="val">Microsoft Windows 11 Home 10.0.26200</td></tr>
+<tr><td class="key">Build Number</td><td class="val">26200</td></tr>
+<tr><td class="key">Architecture</td><td class="val">64-bit</td></tr>
+</table>
+<div class="section-title">📊 Findings by Category</div>
+<table class="cat-table">
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th class="num">Critical</th>
+      <th class="num">High</th>
+      <th class="num">Medium</th>
+      <th class="num">Low</th>
+      <th class="num">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Windows Token Privileges</td>
+      <td class="num n-critical">1</td>
+      <td class="num n-high">3</td>
+      <td class="num n-medium">1</td>
+      <td class="num n-low">3</td>
+      <td class="num" style="font-weight:600">8</td>
+    </tr>
+    <tr>
+      <td>Windows Credentials</td>
+      <td class="num n-critical">1</td>
+      <td class="num n-high">1</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-zero">—</td>
+      <td class="num" style="font-weight:600">2</td>
+    </tr>
+    <tr>
+      <td>Windows Scheduled Tasks</td>
+      <td class="num n-critical">1</td>
+      <td class="num n-high">2</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-zero">—</td>
+      <td class="num" style="font-weight:600">3</td>
+    </tr>
+    <tr>
+      <td>Windows Service</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-high">2</td>
+      <td class="num n-medium">1</td>
+      <td class="num n-zero">—</td>
+      <td class="num" style="font-weight:600">3</td>
+    </tr>
+    <tr>
+      <td>Windows Registry</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-high">1</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-zero">—</td>
+      <td class="num" style="font-weight:600">1</td>
+    </tr>
+    <tr>
+      <td>Windows PATH Hijacking</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-high">1</td>
+      <td class="num n-medium">2</td>
+      <td class="num n-zero">—</td>
+      <td class="num" style="font-weight:600">3</td>
+    </tr>
+    <tr>
+      <td>Windows UAC</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-high">1</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-zero">—</td>
+      <td class="num" style="font-weight:600">1</td>
+    </tr>
+    <tr>
+      <td>Windows Kernel / Services</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-zero">—</td>
+      <td class="num n-medium">1</td>
+      <td class="num n-zero">—</td>
+      <td class="num" style="font-weight:600">1</td>
+    </tr>
+  </tbody>
+</table>
+<div class="section-title">🔍 Detailed Findings (22 total)</div>
+
+<div style="margin-bottom:10px;text-align:right;">
+  <button onclick="expandAll()"
+    style="background:#21262d;color:#8b949e;border:1px solid #30363d;
+    border-radius:6px;padding:5px 14px;cursor:pointer;font-size:0.82rem;margin-right:6px;">
+    Expand All
+  </button>
+  <button onclick="collapseAll()"
+    style="background:#21262d;color:#8b949e;border:1px solid #30363d;
+    border-radius:6px;padding:5px 14px;cursor:pointer;font-size:0.82rem;">
+    Collapse All
+  </button>
+</div>
+
+<div class="finding" data-sev="CRITICAL">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#001</span>
+  <span class="badge sev-critical">🔴 CRITICAL</span>
+  <span class="finding-title">Windows Token Privileges &rsaquo; Dangerous Privilege: SeDebugPrivilege</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SeDebugPrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="CRITICAL">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#002</span>
+  <span class="badge sev-critical">🔴 CRITICAL</span>
+  <span class="finding-title">Windows Credentials &rsaquo; SAM/SYSTEM Hive Readable</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Ensure only SYSTEM and Administrators have read access to SAM/SYSTEM hives. Check for backup copies in C:\Windows\repair\ and restrict them.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="CRITICAL">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#003</span>
+  <span class="badge sev-critical">🔴 CRITICAL</span>
+  <span class="finding-title">Windows Scheduled Tasks &rsaquo; Writable Task Executable</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Fix permissions on &#x27;C:\Program Files (x86)\BraveSoftware\Update\BraveUpdate.exe&#x27;: icacls &quot;C:\Program Files (x86)\BraveSoftware\Update\BraveUpdate.exe&quot; /inheritance:d /grant:r &quot;Administrators:(F)&quot; /remove &quot;Users&quot;</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#004</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Windows Token Privileges &rsaquo; Dangerous Privilege: SeImpersonatePrivilege</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SeImpersonatePrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#005</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Windows Token Privileges &rsaquo; Dangerous Privilege: SeBackupPrivilege</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SeBackupPrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#006</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Windows Token Privileges &rsaquo; Dangerous Privilege: SeRestorePrivilege</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SeRestorePrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#007</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Windows Credentials &rsaquo; Stored Credential (cmdkey)</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove the stored credential: cmdkey /delete:MicrosoftAccount:target=SSO_POP_User:user=ghimirenitesh8@gmail.com Avoid storing credentials unless absolutely necessary.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#008</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Windows Service &rsaquo; Writable Service Executable</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Fix permissions: icacls &quot;C:\WINDOWS\system32\svchost.exe&quot; /inheritance:d /grant:r &quot;Administrators:(F)&quot; /remove &quot;Users&quot;</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#009</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Windows Service &rsaquo; Writable Service Directory</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Restrict directory permissions: icacls &quot;C:\WINDOWS\system32&quot; /grant:r &quot;Administrators:(OI)(CI)F&quot; /remove &quot;Users&quot;</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#010</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Windows Registry &rsaquo; Writable AutoRun Binary</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Fix permissions on C:\WINDOWS\System32\DriverStore\FileRepository\realtekservice.inf_amd64_9971779a1c712866\RtkAudUService64.exe or remove the AutoRun entry if it is not required.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#011</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Windows PATH Hijacking &rsaquo; Writable Directory in %PATH%</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove write permissions from &#x27;C:\Program Files\Git\mingw64\bin&#x27; for non-admin users: icacls &quot;C:\Program Files\Git\mingw64\bin&quot; /remove &quot;Users&quot; /T</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#012</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Windows Scheduled Tasks &rsaquo; Writable Task Binary Directory</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Restrict write access to &#x27;C:\Program Files (x86)\BraveSoftware\Update&#x27; for non-admin users.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#013</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Windows Scheduled Tasks &rsaquo; Missing Task Executable</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove or update the scheduled task &#x27;UninstallDeviceTask&#x27; to point to a valid executable, or disable the task if it is no longer needed.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="HIGH">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#014</span>
+  <span class="badge sev-high">🟠 HIGH</span>
+  <span class="finding-title">Windows UAC &rsaquo; Standard Users Auto-Elevated Without Prompt</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Set ConsentPromptBehaviorUser to 0 (auto-deny) or 1 (credential prompt).</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#015</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">Windows Token Privileges &rsaquo; Dangerous Privilege: SeLoadDriverPrivilege</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SeLoadDriverPrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#016</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">Windows Service &rsaquo; Unquoted Service Path</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Wrap the ImagePath value in quotes: sc config ADPSvc binpath= \&quot;C:\WINDOWS\system32\svchost.exe\&quot;</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#017</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">Windows Kernel / Services &rsaquo; Print Spooler Running</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Disable if not needed: Stop-Service Spooler; Set-Service Spooler -StartupType Disabled. Ensure KB5004945 or later is installed.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#018</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">Windows Token Privileges &rsaquo; Dangerous Privilege: SeTakeOwnershipPrivilege</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SeTakeOwnershipPrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#019</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">Windows Token Privileges &rsaquo; Dangerous Privilege: SeManageVolumePrivilege</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SeManageVolumePrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="LOW">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#020</span>
+  <span class="badge sev-low">🟢 LOW</span>
+  <span class="finding-title">Windows Token Privileges &rsaquo; Dangerous Privilege: SeCreateSymbolicLinkPrivilege</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Remove SeCreateSymbolicLinkPrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#021</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">Windows PATH Hijacking &rsaquo; Missing PATH Directory (Phantom Dir Attack)</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Create the missing directory &#x27;C:\Users\Administrator\bin&#x27; with correct permissions, or remove it from the PATH.</pre>
+</div>
+  </div>
+</div>
+<div class="finding" data-sev="MEDIUM">
+  
+<div class="finding-header" onclick="toggleFinding(this)">
+  <span class="finding-num">#022</span>
+  <span class="badge sev-medium">🟡 MEDIUM</span>
+  <span class="finding-title">Windows PATH Hijacking &rsaquo; Writable Working Directory (DLL Hijacking)</span>
+  <span class="finding-path">N/A</span>
+  <span class="toggle-icon">▼</span>
+</div>
+  <div class="finding-body">
+    <div class="field-grid"><div class="field-label">Path / Target</div><div class="field-value">N/A</div>
+</div>
+<div class="subsection">
+  <div class="subsection-title fix">🛠 Mitigation</div>
+  <pre>Avoid running privileged processes from user-writable directories. Use the SafeDllSearchMode registry setting: HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\SafeDllSearchMode = 1</pre>
+</div>
+  </div>
+</div>
+<div class="footer">
+  PRIVESC Cross-Platform Privilege Escalation Toolkit &nbsp;|&nbsp;
+  For authorised security testing and educational purposes only &nbsp;|&nbsp;
+  Generated 2026-05-09 09:43:35
+</div>
+</div>
+<script>
+function toggleFinding(el) {
+    el.closest('.finding').classList.toggle('open');
+}
+function expandAll() {
+    document.querySelectorAll('.finding').forEach(f => f.classList.add('open'));
+}
+function collapseAll() {
+    document.querySelectorAll('.finding').forEach(f => f.classList.remove('open'));
+    window.scrollTo(0, 0);
+}
+// Auto-expand CRITICAL findings
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.finding[data-sev="CRITICAL"]').forEach(f => f.classList.add('open'));
+});
+</script>
+</body>
+</html>

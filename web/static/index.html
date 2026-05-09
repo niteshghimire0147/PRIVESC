@@ -827,13 +827,13 @@ async function loadScans(page) {
       <td style="display:flex;gap:4px;flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm" onclick="viewScan('${s.id}')">View</button>
         <div class="report-dropdown" style="position:relative;display:inline-block">
-          <button class="btn btn-primary btn-sm" onclick="toggleReportMenu('${s.id}',this)">📄 Report ▾</button>
-          <div id="rmenu-${s.id}" style="display:none;position:absolute;top:100%;left:0;z-index:999;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);min-width:130px;box-shadow:0 4px 16px rgba(0,0,0,.4)">
-            <div onclick="exportScan('${s.id}','pdf')"  style="padding:8px 14px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='rgba(59,130,246,.1)'" onmouseout="this.style.background=''">📕 PDF Report</div>
-            <div onclick="exportScan('${s.id}','html')" style="padding:8px 14px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='rgba(59,130,246,.1)'" onmouseout="this.style.background=''">🌐 HTML Report</div>
-            <div onclick="exportScan('${s.id}','txt')"  style="padding:8px 14px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='rgba(59,130,246,.1)'" onmouseout="this.style.background=''">📝 TXT Report</div>
-            <div onclick="exportScan('${s.id}','json')" style="padding:8px 14px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='rgba(59,130,246,.1)'" onmouseout="this.style.background=''">📦 JSON Export</div>
-            <div onclick="exportScan('${s.id}','sarif')" style="padding:8px 14px;cursor:pointer;font-size:12px" onmouseover="this.style.background='rgba(59,130,246,.1)'" onmouseout="this.style.background=''">🔬 SARIF Export</div>
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();toggleReportMenu('${s.id}')">📄 Report ▾</button>
+          <div id="rmenu-${s.id}" style="display:none;position:fixed;z-index:9999;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,.6)">
+            <div onclick="event.stopPropagation();exportScan('${s.id}','pdf')"  style="padding:10px 16px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='rgba(59,130,246,.15)'" onmouseout="this.style.background=''">📕 PDF Report</div>
+            <div onclick="event.stopPropagation();exportScan('${s.id}','html')" style="padding:10px 16px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='rgba(59,130,246,.15)'" onmouseout="this.style.background=''">🌐 HTML Report</div>
+            <div onclick="event.stopPropagation();exportScan('${s.id}','txt')"  style="padding:10px 16px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='rgba(59,130,246,.15)'" onmouseout="this.style.background=''">📝 TXT Report</div>
+            <div onclick="event.stopPropagation();exportScan('${s.id}','json')" style="padding:10px 16px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='rgba(59,130,246,.15)'" onmouseout="this.style.background=''">📦 JSON Export</div>
+            <div onclick="event.stopPropagation();exportScan('${s.id}','sarif')" style="padding:10px 16px;cursor:pointer;font-size:12px" onmouseover="this.style.background='rgba(59,130,246,.15)'" onmouseout="this.style.background=''">🔬 SARIF Export</div>
           </div>
         </div>
         <button class="btn btn-danger btn-sm" onclick="deleteScan('${s.id}')">Delete</button>
@@ -1246,28 +1246,48 @@ async function setIntelInterval() {
 }
 
 // ── Report Export ────────────────────────────────────────────
-function toggleReportMenu(scanId, btn) {
-  // Close any other open menus first
+function toggleReportMenu(scanId) {
+  // Close all other open menus
   document.querySelectorAll('[id^="rmenu-"]').forEach(m => {
     if(m.id !== 'rmenu-'+scanId) m.style.display = 'none';
   });
   const menu = document.getElementById('rmenu-'+scanId);
-  if(menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  if(!menu) return;
+  const isOpen = menu.style.display === 'block';
+  if(isOpen) { menu.style.display = 'none'; return; }
+
+  // Position using fixed coords so it is never clipped by table overflow
+  const btn = document.querySelector(`[onclick*="toggleReportMenu('${scanId}')"]`);
+  if(btn) {
+    const r = btn.getBoundingClientRect();
+    menu.style.top  = (r.bottom + window.scrollY) + 'px';
+    menu.style.left = r.left + 'px';
+  }
+  menu.style.display = 'block';
 }
 
 // Close report menus when clicking outside
-document.addEventListener('click', e => {
-  if(!e.target.closest('.report-dropdown')) {
-    document.querySelectorAll('[id^="rmenu-"]').forEach(m => m.style.display = 'none');
-  }
+document.addEventListener('click', () => {
+  document.querySelectorAll('[id^="rmenu-"]').forEach(m => m.style.display = 'none');
 });
 
 async function exportScan(scanId, fmt) {
-  // Close any open dropdown
   document.querySelectorAll('[id^="rmenu-"]').forEach(m => m.style.display = 'none');
 
   const fmtLabels = {pdf:'PDF', html:'HTML', txt:'TXT', json:'JSON', sarif:'SARIF'};
   toast(`Generating ${fmtLabels[fmt]||fmt} report…`);
+
+  function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href     = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
 
   try {
     const resp = await fetch(`${API}/api/scans/${scanId}/export/${fmt}`);
@@ -1277,25 +1297,18 @@ async function exportScan(scanId, fmt) {
       toast(msg, true); return;
     }
 
-    // JSON / SARIF — pretty-print and download as .json
     if(fmt === 'json' || fmt === 'sarif') {
       const data = await resp.json();
       const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-      const url  = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `privesc_${scanId.slice(0,8)}.${fmt}.json`;
-      a.click(); URL.revokeObjectURL(url);
+      triggerDownload(blob, `privesc_${scanId.slice(0,8)}.${fmt}.json`);
     } else {
-      // PDF / HTML / TXT — stream as file download
       const blob = await resp.blob();
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href = url; a.download = `privesc_${scanId.slice(0,8)}.${fmt}`;
-      a.click(); URL.revokeObjectURL(url);
+      const ext  = fmt === 'pdf' ? 'pdf' : fmt === 'html' ? 'html' : 'txt';
+      triggerDownload(blob, `privesc_${scanId.slice(0,8)}.${ext}`);
     }
     toast(`${fmtLabels[fmt]||fmt} report downloaded ✓`);
   } catch(e) {
-    toast('Export error: '+e.message, true);
+    toast('Export error: ' + e.message, true);
   }
 }
 

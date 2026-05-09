@@ -63,11 +63,20 @@ TRACKED_CVES = [
 
 CACHE_TTL_HOURS     = 24    # full cache TTL
 CVE_TTL_HOURS       = 72    # per-CVE TTL: skip re-fetch if fresher than this
-FETCH_TIMEOUT       = 8     # seconds per HTTP call (was 15)
-NVD_RATE_DELAY      = 0.6   # seconds between NVD calls (5 req/30s limit)
-CVEORG_RATE_DELAY   = 0.2   # seconds between CVE.org calls
-NVD_MAX_WORKERS     = 2     # parallel NVD fetch workers
-CVEORG_MAX_WORKERS  = 4     # parallel CVE.org fetch workers
+FETCH_TIMEOUT       = 8     # seconds per HTTP call
+
+# NVD rate limits:
+#   Without API key: 5 req / 30s  →  1 worker,  6.5s delay
+#   With API key:   50 req / 30s  →  8 workers, 0.5s delay
+if NVD_API_KEY:
+    NVD_RATE_DELAY  = 0.5   # 50 req/30s authenticated
+    NVD_MAX_WORKERS = 8     # parallel workers — safe at 50 req/30s
+else:
+    NVD_RATE_DELAY  = 6.5   # 5 req/30s unauthenticated (stay under limit)
+    NVD_MAX_WORKERS = 1     # single worker to avoid 429s
+
+CVEORG_RATE_DELAY   = 0.15  # CVE.org has no hard limit — be a good citizen
+CVEORG_MAX_WORKERS  = 6     # parallel CVE.org fetch workers
 NVD_MAX_RETRIES     = 3     # retries on HTTP 429
 
 
@@ -173,13 +182,23 @@ def _fetch_nvd_cve(cve_id: str, kev_catalog: set) -> tuple[str, dict | None]:
     cve_item = vulns[0].get("cve", {})
     metrics  = cve_item.get("metrics", {})
 
-    cvss_score, cvss_vector = None, ""
+    cvss_score, cvss_vector, severity = None, "", ""
     for key in ("cvssMetricV31", "cvssMetricV30", "cvssMetricV2"):
         if metrics.get(key):
-            m           = metrics[key][0].get("cvssData", {})
-            cvss_score  = m.get("baseScore")
-            cvss_vector = m.get("vectorString", "")
+            m           = metrics[key][0]
+            cvss_data   = m.get("cvssData", {})
+            cvss_score  = cvss_data.get("baseScore")
+            cvss_vector = cvss_data.get("vectorString", "")
+            # NVD v3 supplies baseSeverity directly; v2 uses baseSeverity too
+            severity    = (m.get("baseSeverity") or cvss_data.get("baseSeverity", "")).upper()
             break
+
+    # Derive severity from score if NVD didn't supply it explicitly
+    if not severity and cvss_score is not None:
+        if cvss_score >= 9.0:   severity = "CRITICAL"
+        elif cvss_score >= 7.0: severity = "HIGH"
+        elif cvss_score >= 4.0: severity = "MEDIUM"
+        else:                   severity = "LOW"
 
     descriptions = cve_item.get("descriptions", [])
     desc_en = next((d["value"] for d in descriptions if d.get("lang") == "en"), "")
@@ -189,6 +208,7 @@ def _fetch_nvd_cve(cve_id: str, kev_catalog: set) -> tuple[str, dict | None]:
         "description":       desc_en[:500],
         "cvss_score":        cvss_score,
         "cvss_vector":       cvss_vector,
+        "severity":          severity,
         "published":         cve_item.get("published", ""),
         "last_modified":     cve_item.get("lastModified", ""),
         "exploited_in_wild": cve_id in kev_catalog,

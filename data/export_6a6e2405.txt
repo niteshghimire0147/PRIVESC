@@ -1,0 +1,212 @@
+════════════════════════════════════════════════════════════════════════
+  PRIVILEGE ESCALATION SCANNER — SECURITY REPORT
+════════════════════════════════════════════════════════════════════════
+  Generated : 2026-05-09 09:50:17
+  Hostname  : DESKTOP-OTS261O
+  User      : Administrator  (ROOT ⚠)
+  Kernel    : 26200
+  OS        : Microsoft Windows 11 Home 10.0.26200
+  ID output : None
+════════════════════════════════════════════════════════════════════════
+
+─── EXECUTIVE SUMMARY ──────────────────────────────────────────────────
+  Overall Risk Level: CRITICAL
+  Risk Score        : 98
+
+  CRITICAL :    3  |  HIGH     :   11  |  MEDIUM   :    5  |  LOW      :    3
+  Total Findings    : 22
+
+─── FINDINGS BY CATEGORY ───────────────────────────────────────────────
+  Category                        CRIT  HIGH   MED   LOW  TOTAL
+  ------------------------------ ----- ----- ----- ----- ------
+  Windows Token Privileges           1     3     1     3      8
+  Windows Credentials                1     1     0     0      2
+  Windows Scheduled Tasks            1     2     0     0      3
+  Windows Service                    0     2     1     0      3
+  Windows Registry                   0     1     0     0      1
+  Windows PATH Hijacking             0     1     2     0      3
+  Windows UAC                        0     1     0     0      1
+  Windows Kernel / Services          0     0     1     0      1
+
+─── DETAILED FINDINGS ──────────────────────────────────────────────────
+
+  ----------------------------------------------------------------------
+  [CRITICAL]  #001  Windows Token Privileges → Dangerous Privilege: SeDebugPrivilege
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Remove SeDebugPrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.
+
+  ----------------------------------------------------------------------
+  [CRITICAL]  #002  Windows Credentials → SAM/SYSTEM Hive Readable
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Ensure only SYSTEM and Administrators have read access to SAM/SYSTEM hives. Check for backup copies in C:\Windows\repair\ and restrict them.
+
+  ----------------------------------------------------------------------
+  [CRITICAL]  #003  Windows Scheduled Tasks → Writable Task Executable
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Fix permissions on 'C:\Program Files (x86)\BraveSoftware\Update\BraveUpdate.exe': icacls "C:\Program Files (x86)\BraveSoftware\Update\BraveUpdate.exe" /inheritance:d /grant:r "Administrators:(F)" /remove "Users"
+
+  ----------------------------------------------------------------------
+  [HIGH]  #004  Windows Token Privileges → Dangerous Privilege: SeImpersonatePrivilege
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Remove SeImpersonatePrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.
+
+  ----------------------------------------------------------------------
+  [HIGH]  #005  Windows Token Privileges → Dangerous Privilege: SeBackupPrivilege
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Remove SeBackupPrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.
+
+  ----------------------------------------------------------------------
+  [HIGH]  #006  Windows Token Privileges → Dangerous Privilege: SeRestorePrivilege
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Remove SeRestorePrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.
+
+  ----------------------------------------------------------------------
+  [HIGH]  #007  Windows Credentials → Stored Credential (cmdkey)
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Remove the stored credential: cmdkey /delete:MicrosoftAccount:target=SSO_POP_User:user=ghimirenitesh8@gmail.com Avoid storing credentials unless absolutely necessary.
+
+  ----------------------------------------------------------------------
+  [HIGH]  #008  Windows Service → Writable Service Executable
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Fix permissions: icacls "C:\WINDOWS\system32\svchost.exe" /inheritance:d /grant:r "Administrators:(F)" /remove "Users"
+
+  ----------------------------------------------------------------------
+  [HIGH]  #009  Windows Service → Writable Service Directory
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Restrict directory permissions: icacls "C:\WINDOWS\system32" /grant:r "Administrators:(OI)(CI)F" /remove "Users"
+
+  ----------------------------------------------------------------------
+  [HIGH]  #010  Windows Registry → Writable AutoRun Binary
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Fix permissions on C:\WINDOWS\System32\DriverStore\FileRepository\realtekservice.inf_amd64_9971779a1c712866\RtkAudUService64.exe or remove the AutoRun entry if it is not required.
+
+  ----------------------------------------------------------------------
+  [HIGH]  #011  Windows PATH Hijacking → Writable Directory in %PATH%
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Remove write permissions from 'C:\Program Files\Git\mingw64\bin' for non-admin users: icacls "C:\Program Files\Git\mingw64\bin" /remove "Users" /T
+
+  ----------------------------------------------------------------------
+  [HIGH]  #012  Windows Scheduled Tasks → Writable Task Binary Directory
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Restrict write access to 'C:\Program Files (x86)\BraveSoftware\Update' for non-admin users.
+
+  ----------------------------------------------------------------------
+  [HIGH]  #013  Windows Scheduled Tasks → Missing Task Executable
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Remove or update the scheduled task 'UninstallDeviceTask' to point to a valid executable, or disable the task if it is no longer needed.
+
+  ----------------------------------------------------------------------
+  [HIGH]  #014  Windows UAC → Standard Users Auto-Elevated Without Prompt
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Set ConsentPromptBehaviorUser to 0 (auto-deny) or 1 (credential prompt).
+
+  ----------------------------------------------------------------------
+  [MEDIUM]  #015  Windows Token Privileges → Dangerous Privilege: SeLoadDriverPrivilege
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Remove SeLoadDriverPrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.
+
+  ----------------------------------------------------------------------
+  [MEDIUM]  #016  Windows Service → Unquoted Service Path
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Wrap the ImagePath value in quotes: sc config ADPSvc binpath= \"C:\WINDOWS\system32\svchost.exe\"
+
+  ----------------------------------------------------------------------
+  [MEDIUM]  #017  Windows Kernel / Services → Print Spooler Running
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Disable if not needed: Stop-Service Spooler; Set-Service Spooler -StartupType Disabled. Ensure KB5004945 or later is installed.
+
+  ----------------------------------------------------------------------
+  [LOW]  #018  Windows Token Privileges → Dangerous Privilege: SeTakeOwnershipPrivilege
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Remove SeTakeOwnershipPrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.
+
+  ----------------------------------------------------------------------
+  [LOW]  #019  Windows Token Privileges → Dangerous Privilege: SeManageVolumePrivilege
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Remove SeManageVolumePrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.
+
+  ----------------------------------------------------------------------
+  [LOW]  #020  Windows Token Privileges → Dangerous Privilege: SeCreateSymbolicLinkPrivilege
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Remove SeCreateSymbolicLinkPrivilege from this account if not required. Use the principle of least privilege — assign only necessary rights via Local Security Policy → User Rights Assignment.
+
+  ----------------------------------------------------------------------
+  [MEDIUM]  #021  Windows PATH Hijacking → Missing PATH Directory (Phantom Dir Attack)
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Create the missing directory 'C:\Users\Administrator\bin' with correct permissions, or remove it from the PATH.
+
+  ----------------------------------------------------------------------
+  [MEDIUM]  #022  Windows PATH Hijacking → Writable Working Directory (DLL Hijacking)
+  ----------------------------------------------------------------------
+  Path/Target : N/A
+  ····································································
+  MITIGATION:
+    Avoid running privileged processes from user-writable directories. Use the SafeDllSearchMode registry setting: HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\SafeDllSearchMode = 1
+
+════════════════════════════════════════════════════════════════════════
+  END OF REPORT
+  This report is for authorised security testing and educational purposes only.
+════════════════════════════════════════════════════════════════════════
