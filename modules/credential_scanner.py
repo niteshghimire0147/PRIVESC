@@ -294,7 +294,7 @@ def _scan_config_files(verbose):
 
             if hits:
                 severity = "CRITICAL" if "/etc/" in cfg_path else "HIGH"
-                notes_lines = [f"Hardcoded credentials detected in config file:", ""]
+                notes_lines = ["Hardcoded credentials detected in config file:", ""]
                 notes_lines += [f"  {h}" for h in hits[:6]]
                 if len(hits) > 6:
                     notes_lines.append(f"  … and {len(hits) - 6} more.")

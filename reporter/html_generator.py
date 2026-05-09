@@ -394,20 +394,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
 def _banner_html(system_info, summary):
     risk = summary["risk_level"]
+    # Normalise cross-platform keys
+    current_user  = system_info.get("current_user") or system_info.get("username", "")
+    is_root       = system_info.get("is_root") or system_info.get("is_elevated", False)
+    kernel_str    = system_info.get("kernel_release") or system_info.get("build_number", "")
+    os_str        = system_info.get("os_name") or system_info.get("os_version", "")
+    platform_name = "Windows" if system_info.get("build_number") else "Linux"
+    priv_warn     = '&nbsp;<span style="color:#ff6b6b">ADMIN ⚠</span>' if is_root else ""
     return f"""
 <div class="banner">
   <div>
-    <h1>🛡 Linux Privilege Escalation Scanner</h1>
+    <h1>🛡 PRIVESC — {_esc(platform_name)} Privilege Escalation Scanner</h1>
     <div class="subtitle">Detection-only | Authorised security testing &amp; education</div>
     <div class="risk-badge risk-{_esc(risk)}">{_esc(risk)} RISK</div>
   </div>
   <div class="meta">
     <div>Generated &nbsp;<span>{_esc(_now())}</span></div>
     <div>Host &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>{_esc(system_info.get('hostname'))}</span></div>
-    <div>User &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>{_esc(system_info.get('current_user'))}</span>
-         {'&nbsp;<span style="color:#ff6b6b">ROOT ⚠</span>' if system_info.get("is_root") else ""}</div>
-    <div>Kernel &nbsp;&nbsp;&nbsp;&nbsp;<span>{_esc(system_info.get('kernel_release'))}</span></div>
-    <div>OS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>{_esc(system_info.get('os_name'))}</span></div>
+    <div>User &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>{_esc(current_user)}</span>{priv_warn}</div>
+    <div>Kernel &nbsp;&nbsp;&nbsp;&nbsp;<span>{_esc(kernel_str)}</span></div>
+    <div>OS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>{_esc(os_str)}</span></div>
     <div>Risk Score <span>{summary['risk_score']}</span></div>
   </div>
 </div>"""
@@ -478,14 +484,20 @@ def _category_table_html(findings_by_category, category_counts):
 
 def _system_info_table_html(system_info):
     rows = ""
+    # Normalise cross-platform keys
+    current_user = system_info.get("current_user") or system_info.get("username")
+    kernel_str   = system_info.get("kernel_release") or system_info.get("build_number")
+    os_str       = system_info.get("os_name") or system_info.get("os_version")
     fields = [
         ("Hostname",        system_info.get("hostname")),
-        ("Current User",    system_info.get("current_user")),
+        ("Current User",    current_user),
         ("User ID (id)",    system_info.get("user_id")),
-        ("Kernel Release",  system_info.get("kernel_release")),
+        ("Kernel Release",  kernel_str),
         ("Kernel Full",     system_info.get("kernel_version")),
-        ("OS",              system_info.get("os_name")),
+        ("OS",              os_str),
         ("OS Version",      system_info.get("os_version")),
+        ("Build Number",    system_info.get("build_number")),
+        ("Architecture",    system_info.get("architecture")),
         ("Home Directory",  system_info.get("home_dir")),
         ("PATH",            system_info.get("env_path")),
         ("Sudo Version",    system_info.get("sudo_version")),
@@ -690,14 +702,14 @@ def generate_html(system_info, results, output_file=None):
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PrivEsc Report — {_esc(system_info.get('hostname', 'Linux'))} — {_esc(_now())}</title>
+  <title>PRIVESC Report â {_esc(system_info.get('hostname', 'host'))} â {_esc(_now())}</title>
   <style>{CSS}</style>
 </head>
 <body>
 <div class="container">
 {body}
 <div class="footer">
-  Linux Privilege Escalation Automation Toolkit &nbsp;|&nbsp;
+  PRIVESC Cross-Platform Privilege Escalation Toolkit &nbsp;|&nbsp;
   For authorised security testing and educational purposes only &nbsp;|&nbsp;
   Generated {_esc(_now())}
 </div>

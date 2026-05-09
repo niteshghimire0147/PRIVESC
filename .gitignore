@@ -1,0 +1,65 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+*.whl
+
+# ── Virtual environments ───────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+.env/
+
+# ── Environment / secrets (NEVER commit these) ────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.secret
+secrets.json
+
+# ── Database & scan data (generated at runtime) ───────────────────────────────
+data/privesc.db
+data/scan_*.json
+data/threat_intel_cache.json
+data/.fuse_hidden*
+
+# ── Generated output reports ──────────────────────────────────────────────────
+output/
+*.html.bak
+
+# ── Pytest / coverage ─────────────────────────────────────────────────────────
+.pytest_cache/
+pytest-cache-files-*/
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# ── IDEs and editors ──────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Research paper / personal documents (not for public repo) ────────────────
+PRIVESC_Research_Paper.docx
+
+# ── Temporary / OS files ──────────────────────────────────────────────────────
+*.tmp
+*.bak
+*.orig

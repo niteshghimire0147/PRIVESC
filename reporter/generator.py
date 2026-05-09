@@ -52,16 +52,22 @@ def _build_text_report(system_info, results, use_color=True):
     findings = results["findings"]
     findings_by_category = results["findings_by_category"]
 
+    # Normalise cross-platform keys
+    current_user  = system_info.get("current_user") or system_info.get("username", "N/A")
+    is_privileged = system_info.get("is_root") or system_info.get("is_elevated", False)
+    priv_label    = "ROOT ⚠" if system_info.get("is_root") else ("Admin ⚠" if is_privileged else "non-root")
+    kernel_str    = system_info.get("kernel_release") or system_info.get("build_number", "N/A")
+    os_str        = system_info.get("os_name") or system_info.get("os_version", "N/A")
+
     # ── Banner ──
     lines.append(_divider("═"))
-    lines.append("  LINUX PRIVILEGE ESCALATION SCANNER — SECURITY REPORT")
+    lines.append("  PRIVILEGE ESCALATION SCANNER — SECURITY REPORT")
     lines.append(_divider("═"))
     lines.append(f"  Generated : {_now()}")
     lines.append(f"  Hostname  : {system_info.get('hostname', 'N/A')}")
-    lines.append(f"  User      : {system_info.get('current_user', 'N/A')}  "
-                 f"({'ROOT' if system_info.get('is_root') else 'non-root'})")
-    lines.append(f"  Kernel    : {system_info.get('kernel_release', 'N/A')}")
-    lines.append(f"  OS        : {system_info.get('os_name', 'N/A')}")
+    lines.append(f"  User      : {current_user}  ({priv_label})")
+    lines.append(f"  Kernel    : {kernel_str}")
+    lines.append(f"  OS        : {os_str}")
     lines.append(f"  ID output : {system_info.get('user_id', 'N/A')}")
     lines.append(_divider("═"))
 
@@ -188,7 +194,7 @@ def _build_text_report(system_info, results, use_color=True):
     # ── Footer ──
     lines.append(f"\n{_divider('═')}")
     lines.append("  END OF REPORT")
-    lines.append(f"  This report is for authorised security testing and educational purposes only.")
+    lines.append("  This report is for authorised security testing and educational purposes only.")
     lines.append(_divider("═"))
 
     return "\n".join(lines)
@@ -198,29 +204,46 @@ def _build_text_report(system_info, results, use_color=True):
 
 def _build_json_report(system_info, results):
     """Build the structured JSON report as a dict."""
-    return {
+    # Normalise cross-platform keys: Linux uses 'current_user'/'is_root',
+    # Windows uses 'username'/'is_elevated'.
+    current_user = system_info.get("current_user") or system_info.get("username")
+    is_privileged = system_info.get("is_root") or system_info.get("is_elevated", False)
+
+    report = {
         "report_metadata": {
             "generated_at": _now(),
-            "tool": "Linux Privilege Escalation Automation Toolkit",
-            "version": "1.0.0",
+            "tool": "PRIVESC Cross-Platform Privilege Escalation Toolkit",
+            "version": "2.2.0",
         },
         "system_info": {
-            "hostname": system_info.get("hostname"),
-            "current_user": system_info.get("current_user"),
-            "user_id": system_info.get("user_id"),
-            "is_root": system_info.get("is_root"),
-            "groups": system_info.get("groups"),
+            "hostname":      system_info.get("hostname"),
+            "current_user":  current_user,
+            "user_id":       system_info.get("user_id"),
+            "is_root":       is_privileged,
+            "groups":        system_info.get("groups"),
             "kernel_release": system_info.get("kernel_release"),
             "kernel_version": system_info.get("kernel_version"),
-            "os_name": system_info.get("os_name"),
-            "os_version": system_info.get("os_version"),
-            "shell_users": system_info.get("shell_users", []),
+            "os_name":       system_info.get("os_name") or system_info.get("os_version"),
+            "os_version":    system_info.get("os_version"),
+            "shell_users":   system_info.get("shell_users", []),
+            # Windows-specific (included when present)
+            "build_number":  system_info.get("build_number"),
+            "architecture":  system_info.get("architecture"),
         },
-        "summary": results["summary"],
-        "category_counts": results["category_counts"],
-        "findings": results["findings"],
+        "summary":          results["summary"],
+        "category_counts":  results["category_counts"],
+        "findings":         results["findings"],
     }
 
+    # Phase 5 enrichment fields — include if present
+    for key in ("attack_paths", "compliance_summary", "priority_summary"):
+        if key in results and results[key]:
+            report[key] = results[key]
+
+    return report
+
+
+# ─── Public API ───────────────────────────────────────────────────────────────
 
 # ─── Public API ───────────────────────────────────────────────────────────────
 

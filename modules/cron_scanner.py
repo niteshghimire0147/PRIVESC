@@ -151,7 +151,7 @@ def scan(verbose=False):
         if not os.path.isfile(source):
             continue
         try:
-            with open(source, "r", errors="replace") as f:
+            with open(source, "r", encoding="utf-8", errors="replace") as f:
                 content = f.read()
         except OSError:
             continue

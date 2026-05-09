@@ -31,7 +31,7 @@ def _load_gtfobins(data_dir):
     """Load the GTFOBins database from data/gtfobins.json."""
     gtfobins_path = os.path.join(data_dir, "gtfobins.json")
     try:
-        with open(gtfobins_path, "r") as f:
+        with open(gtfobins_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return {}

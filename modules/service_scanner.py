@@ -89,7 +89,7 @@ def _scan_systemd_services(verbose=False):
 
     for service_file in all_service_files:
         try:
-            with open(service_file, "r", errors="replace") as f:
+            with open(service_file, "r", encoding="utf-8", errors="replace") as f:
                 content = f.read()
         except Exception:
             continue

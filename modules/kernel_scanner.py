@@ -67,7 +67,7 @@ def _load_cve_db(data_dir):
     """Load kernel CVE database from data/kernel_cves.json."""
     cve_path = os.path.join(data_dir, "kernel_cves.json")
     try:
-        with open(cve_path, "r") as f:
+        with open(cve_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return []
@@ -135,7 +135,7 @@ def _check_kernel_hardening(verbose=False):
 
     for check in checks:
         try:
-            with open(check["path"], "r") as f:
+            with open(check["path"], "r", encoding="utf-8") as f:
                 current = f.read().strip()
         except Exception:
             continue  # File doesn't exist on this kernel/config

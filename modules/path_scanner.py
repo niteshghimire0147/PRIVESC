@@ -117,8 +117,6 @@ def _check_writable_path_dirs(verbose):
     """Check each PATH directory for world-writable or group-writable permissions."""
     findings = []
     path_dirs = _get_path_dirs()
-    raw_path = _get_raw_path()
-
     seen = set()
     for path_dir in path_dirs:
         if path_dir in seen or not path_dir.startswith("/"):
@@ -315,7 +313,7 @@ def _check_sudo_path_preservation(verbose):
     try:
         result = subprocess.run(
             ["sudo", "-l"],
-            capture_output=True, text=True, timeout=10
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=10
         )
         output = result.stdout + result.stderr
     except (FileNotFoundError, subprocess.TimeoutExpired, PermissionError):

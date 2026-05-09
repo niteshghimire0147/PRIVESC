@@ -138,7 +138,7 @@ def _scan_world_writable_dirs(verbose=False):
         if _is_sensitive(path):
             severity = "CRITICAL"
             notes = (
-                f"World-writable directory in sensitive location. "
+                "World-writable directory in sensitive location. "
                 "An attacker can plant malicious files or scripts here."
             )
         else:

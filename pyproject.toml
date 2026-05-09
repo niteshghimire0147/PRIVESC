@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "linux-privesc-toolkit"
+version = "2.1.0"
+description = "Automated Linux privilege escalation detection scanner"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Nitesh Ghimire", email = "ghimirenitesh8@gmail.com" }]
+requires-python = ">=3.6"
+keywords = ["security", "pentest", "privilege-escalation", "linux", "suid", "gtfobins"]
+classifiers = [
+    "Topic :: Security",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+]
+
+[project.scripts]
+privesc-scan = "main:main"
+
+[project.urls]
+Homepage = "https://github.com/niteshghimire/linux-privesc-toolkit"
+"Bug Tracker" = "https://github.com/niteshghimire/linux-privesc-toolkit/issues"
+
+[tool.flake8]
+max-line-length = 120
+exclude = ["__pycache__", ".git", "output", "*.egg-info"]

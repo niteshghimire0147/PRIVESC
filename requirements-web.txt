@@ -1,0 +1,20 @@
+# PRIVESC Web Tier Dependencies
+# Install with: pip install -r requirements-web.txt --break-system-packages
+#
+# The core scanner (main.py) has zero external dependencies (stdlib only).
+# These packages are required ONLY for the web dashboard (web/app.py)
+# and optional remote scanning features.
+
+# ── Web Framework ─────────────────────────────────────────────────────────────
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9        # for form/file upload handling in FastAPI
+pydantic>=2.0.0                # data validation (bundled with FastAPI)
+
+# ── Remote Scanning ───────────────────────────────────────────────────────────
+paramiko>=3.4.0                # agentless SSH scanning (remote/ssh_scanner.py)
+pywinrm>=0.4.3                 # agentless WinRM scanning (remote/winrm_scanner.py)
+
+# ── Optional: Faster JSON / async improvements ────────────────────────────────
+# ujson>=5.9.0                 # drop-in fast JSON (uncomment if needed)
+# httpx>=0.27.0                # async HTTP client (for future async intel feeds)

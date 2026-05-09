@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PRIVESC — Security Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:       #0f1117;
+  --sidebar:  #161b25;
+  --card:     #1e2433;
+  --border:   #2a3244;
+  --text:     #e2e8f0;
+  --muted:    #8892a4;
+  --accent:   #3b82f6;
+  --critical: #ef4444;
+  --high:     #f59e0b;
+  --medium:   #3b82f6;
+  --low:      #22c55e;
+  --radius:   8px;
+  --font:     'Segoe UI', system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); display: flex; height: 100vh; overflow: hidden; }
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+#sidebar {
+  width: 220px; min-width: 220px; background: var(--sidebar);
+  border-right: 1px solid var(--border); display: flex; flex-direction: column;
+  padding: 0; overflow: hidden;
+}
+.brand { padding: 20px 16px; border-bottom: 1px solid var(--border); }
+.brand h1 { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: 1px; }
+.brand p  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+.nav-section { padding: 8px 16px 4px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 16px;
+  cursor: pointer; font-size: 13px; color: var(--muted);
+  transition: all 0.15s; border-left: 3px solid transparent;
+}
+.nav-item:hover { background: rgba(59,130,246,.08); color: var(--text); }
+.nav-item.active { color: var(--accent); background: rgba(59,130,246,.12); border-left-color: var(--accent); }
+.nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-footer { padding: 12px 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
+
+/* ── Main ─────────────────────────────────────────────────── */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar {
+  padding: 14px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--sidebar);
+}
+.topbar h2 { font-size: 17px; font-weight: 600; }
+.topbar-actions { display: flex; gap: 8px; }
+.btn {
+  padding: 8px 16px; border-radius: var(--radius); border: none;
+  cursor: pointer; font-size: 13px; font-weight: 500; transition: 0.15s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #2563eb; }
+.btn-ghost  { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-danger { background: var(--critical); color: #fff; }
+
+#content { flex: 1; overflow-y: auto; padding: 24px; }
+
+/* ── Cards ───────────────────────────────────────────────── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+.kpi-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; position: relative; overflow: hidden;
+}
+.kpi-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.kpi-card .value { font-size: 32px; font-weight: 700; margin: 6px 0 4px; }
+.kpi-card .sub   { font-size: 12px; color: var(--muted); }
+.kpi-card .stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: var(--radius) 0 0 var(--radius); }
+.kpi-critical .stripe { background: var(--critical); }
+.kpi-high     .stripe { background: var(--high); }
+.kpi-medium   .stripe { background: var(--medium); }
+.kpi-low      .stripe { background: var(--low); }
+
+.charts-row { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 24px; }
+.chart-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px;
+}
+.chart-card h3 { font-size: 13px; color: var(--muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: .5px; }
+
+/* ── Table ───────────────────────────────────────────────── */
+.table-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden; margin-bottom: 20px;
+}
+.table-header {
+  padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.table-header h3 { font-size: 14px; font-weight: 600; }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 10px 16px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); border-bottom: 1px solid var(--border); background: rgba(255,255,255,.02); }
+td { padding: 11px 16px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,.04); }
+tr:hover td { background: rgba(59,130,246,.04); }
+tr:last-child td { border-bottom: none; }
+
+/* ── Badges ──────────────────────────────────────────────── */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;
+}
+.badge-CRITICAL { background: rgba(239,68,68,.15); color: var(--critical); }
+.badge-HIGH     { background: rgba(245,158,11,.15); color: var(--high); }
+.badge-MEDIUM   { background: rgba(59,130,246,.15); color: var(--medium); }
+.badge-LOW      { background: rgba(34,197,94,.15);  color: var(--low); }
+.badge-completed { background: rgba(34,197,94,.15); color: var(--low); }
+.badge-running   { background: rgba(59,130,246,.15); color: var(--medium); }
+.badge-failed    { background: rgba(239,68,68,.15); color: var(--critical); }
+
+/* ── Filters ─────────────────────────────────────────────── */
+.filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.filters input, .filters select {
+  background: var(--card); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--radius); padding: 7px 12px; font-size: 13px; outline: none;
+}
+.filters input:focus, .filters select:focus { border-color: var(--accent); }
+.filters input { flex: 1; min-width: 200px; }
+
+/* ── Finding Card ────────────────────────────────────────── */
+.finding-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  margin-bottom: 10px; overflow: hidden;
+}
+.finding-header {
+  padding: 12px 16px; display: flex; align-items: flex-start; gap: 12px; cursor: pointer;
+}
+.finding-header:hover { background: rgba(255,255,255,.02); }
+.finding-body { padding: 0 16px 14px; display: none; border-top: 1px solid var(--border); }
+.finding-body.open { display: block; }
+.finding-body p  { font-size: 13px; color: var(--muted); margin: 10px 0 6px; line-height: 1.6; }
+.finding-body .mitigation { background: rgba(34,197,94,.07); border: 1px solid rgba(34,197,94,.2); border-radius: 6px; padding: 10px 12px; font-size: 12px; color: #86efac; margin-top: 8px; }
+
+/* ── Attack Path Card ────────────────────────────────────── */
+.path-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px; margin-bottom: 12px;
+}
+.path-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.path-card p  { font-size: 13px; color: var(--muted); margin-bottom: 10px; line-height: 1.6; }
+.path-steps   { list-style: none; counter-reset: step; }
+.path-steps li { counter-increment: step; display: flex; gap: 10px; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.path-steps li::before { content: counter(step); background: var(--accent); color: #fff; border-radius: 50%; width: 18px; height: 18px; min-width: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+.path-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.path-meta span { font-size: 11px; color: var(--muted); background: rgba(255,255,255,.05); padding: 3px 8px; border-radius: 4px; }
+
+/* ── Modal ───────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none;
+  align-items: center; justify-content: center; z-index: 1000;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 28px; width: 500px; max-width: 95vw; max-height: 85vh; overflow-y: auto;
+}
+.modal h3 { font-size: 17px; font-weight: 600; margin-bottom: 20px; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+.form-group input, .form-group select {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--radius); padding: 9px 12px; font-size: 13px; outline: none;
+}
+.form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+.checkbox-group { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.checkbox-group input[type=checkbox] { width: auto; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.tab-row { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.tab-btn { padding: 8px 16px; cursor: pointer; font-size: 13px; color: var(--muted); border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── Compliance ──────────────────────────────────────────── */
+.framework-section { margin-bottom: 24px; }
+.framework-section h4 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.control-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 8px; }
+.control-item { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-size: 12px; color: var(--muted); border-left: 3px solid var(--accent); }
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  #sidebar { width: 60px; min-width: 60px; }
+  .brand h1 { font-size: 14px; }
+  .brand p { display: none; }
+  .nav-section { display: none; }
+  .nav-item { padding: 12px; justify-content: center; }
+  .nav-item .icon { margin: 0; }
+  .nav-item span:not(.icon) { display: none; }
+  .sidebar-footer { display: none; }
+}
+
+@media (max-width: 768px) {
+  #sidebar {
+    position: fixed;
+    left: -100%;
+    top: 0;
+    width: 220px;
+    min-width: 220px;
+    height: 100vh;
+    flex-direction: column;
+    transition: left 0.3s ease;
+    z-index: 1000;
+    border-right: 1px solid var(--border);
+  }
+  #sidebar.mobile-open { left: 0; }
+  .brand { padding: 20px 16px; border-bottom: 1px solid var(--border); }
+  nav { display: flex; flex-direction: column; padding: 12px 0; }
+  .nav-section { display: block; padding: 8px 16px 4px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .nav-item { padding: 9px 16px; justify-content: flex-start; }
+  .nav-item .icon { margin: 0 10px 0 0; }
+  .nav-item span:not(.icon) { display: inline; }
+  .sidebar-footer { display: block; }
+  #main { height: auto; margin-left: 0; }
+  .topbar { padding: 10px 12px; }
+  .topbar h2 { font-size: 15px; }
+  #content { padding: 12px; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .charts-row { grid-template-columns: 1fr; gap: 12px; }
+  .chart-card { padding: 16px; }
+  .chart-card h3 { font-size: 12px; margin-bottom: 12px; }
+  .filters { flex-direction: column; gap: 8px; }
+  .filters input, .filters select { min-width: auto; }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .kpi-card .value { font-size: 24px; }
+  .table-card { overflow-x: auto; }
+  table { min-width: 600px; }
+  .topbar-actions { gap: 4px; }
+  .btn-sm { padding: 4px 8px; font-size: 11px; }
+}
+
+/* Mobile sidebar overlay backdrop */
+#sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+body.sidebar-open #sidebar-backdrop { display: block; }
+
+/* Scrollable table container */
+.table-card { overflow-x: auto; }
+
+/* Mobile menu button */
+#mobile-menu-btn { display: none; background: none; border: none; color: var(--text); font-size: 20px; cursor: pointer; padding: 4px; }
+@media (max-width: 768px) { #mobile-menu-btn { display: block; } }
+
+
+/* ── Toast ───────────────────────────────────────────────── */
+#toast {
+  position: fixed; bottom: 24px; right: 24px; background: var(--card);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 20px; font-size: 13px; z-index: 9999;
+  transform: translateY(80px); opacity: 0; transition: all .3s;
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ──────────────────────────────────────────── -->
+<div id="sidebar">
+  <div class="brand">
+    <h1>🔒 PRIVESC</h1>
+    <p>Security Scanner v2.1.0</p>
+  </div>
+  <nav>
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="show('dashboard')"><span class="icon">📊</span> <span>Dashboard</span></div>
+    <div class="nav-item" onclick="show('hosts')"><span class="icon">🖥️</span> <span>Hosts</span></div>
+    <div class="nav-section">Analysis</div>
+    <div class="nav-item" onclick="show('scans')"><span class="icon">🔍</span> <span>Scans</span></div>
+    <div class="nav-item" onclick="show('findings')"><span class="icon">⚠️</span> <span>Findings</span></div>
+    <div class="nav-item" onclick="show('paths')"><span class="icon">🗺️</span> <span>Attack Paths</span></div>
+    <div class="nav-section">Intelligence</div>
+    <div class="nav-item" onclick="show('intel')"><span class="icon">🛡️</span> <span>CVE Intel</span></div>
+    <div class="nav-section">Governance</div>
+    <div class="nav-item" onclick="show('compliance')"><span class="icon">📋</span> <span>Compliance</span></div>
+    <div class="nav-item" onclick="show('compare')"><span class="icon">🔄</span> <span>Diff Scans</span></div>
+  </nav>
+  <div class="sidebar-footer">For authorised security testing only</div>
+</div>
+<div id="sidebar-backdrop" onclick="closeMobileMenu()"></div>
+
+<!-- ── Main ─────────────────────────────────────────────── -->
+<div id="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button id="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+      <h2 id="page-title">Dashboard</h2>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="refreshCurrent()">↻ Refresh</button>
+      <button class="btn btn-primary btn-sm" onclick="openNewScanModal()">＋ New Scan</button>
+    </div>
+  </div>
+
+  <div id="content">
+
+    <!-- ── Dashboard ─────────────────────────────────────── -->
+    <div id="view-dashboard">
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="kpi-card kpi-critical"><div class="stripe"></div><div class="label">Critical Findings</div><div class="value" id="kpi-critical">—</div><div class="sub">across all hosts</div></div>
+        <div class="kpi-card kpi-high"><div class="stripe"></div><div class="label">High Findings</div><div class="value" id="kpi-high">—</div><div class="sub">across all hosts</div></div>
+        <div class="kpi-card kpi-medium"><div class="stripe"></div><div class="label">Hosts Scanned</div><div class="value" id="kpi-hosts">—</div><div class="sub">total inventory</div></div>
+        <div class="kpi-card kpi-low"><div class="stripe"></div><div class="label">Total Scans</div><div class="value" id="kpi-scans">—</div><div class="sub">completed</div></div>
+      </div>
+      <!-- Intel status bar -->
+      <div id="dash-intel-bar" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:14px">🛡️ <strong>CVE Intel:</strong></span>
+          <span id="dash-intel-status" style="font-size:13px;color:var(--muted)">Loading…</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="show('intel')">Manage →</button>
+          <button class="btn btn-primary btn-sm" id="dash-intel-btn" onclick="triggerIntelUpdate();show('intel')">🔄 Update CVEs</button>
+        </div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card"><h3>Severity Breakdown</h3><canvas id="chart-sev" height="180"></canvas></div>
+        <div class="chart-card"><h3>Scan Activity (14 days)</h3><canvas id="chart-trend" height="180"></canvas></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3>Recent Scans</h3></div>
+        <table><thead><tr><th>Host</th><th>Risk</th><th>Score</th><th>Started</th><th>Actions</th></tr></thead>
+        <tbody id="recent-scans-body"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ── Hosts ──────────────────────────────────────────── -->
+    <div id="view-hosts" style="display:none">
+      <div class="table-card">
+        <div class="table-header"><h3>Host Inventory</h3><span id="host-count" style="font-size:12px;color:var(--muted)"></span></div>
+        <table>
+          <thead><tr><th>Hostname</th><th>Platform</th><th>Risk Level</th><th>Last Scan</th><th>Total Scans</th><th>Actions</th></tr></thead>
+          <tbody id="hosts-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Scans ──────────────────────────────────────────── -->
+    <div id="view-scans" style="display:none">
+      <div class="filters">
+        <input id="scan-search" placeholder="Search hostname…" oninput="loadScans()"/>
+        <select id="scan-status" onchange="loadScans()">
+          <option value="">All Status</option>
+          <option>completed</option><option>running</option><option>failed</option>
+        </select>
+        <select id="scan-risk" onchange="loadScans()">
+          <option value="">All Risk Levels</option>
+          <option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option>
+        </select>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3>Scan History</h3><span id="scan-total" style="font-size:12px;color:var(--muted)"></span></div>
+        <table>
+          <thead><tr><th>ID</th><th>Host</th><th>Type</th><th>Status</th><th>Risk</th><th>Score</th><th>Started</th><th>Actions</th></tr></thead>
+          <tbody id="scans-body"></tbody>
+        </table>
+      </div>
+      <div id="scan-pages" style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"></div>
+    </div>
+
+    <!-- ── Findings ───────────────────────────────────────── -->
+    <div id="view-findings" style="display:none">
+      <div class="filters">
+        <input id="find-search" placeholder="Search findings…" oninput="loadFindings()"/>
+        <select id="find-sev" onchange="loadFindings()">
+          <option value="">All Severity</option>
+          <option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option>
+        </select>
+        <select id="find-cat" onchange="loadFindings()">
+          <option value="">All Categories</option>
+          <option>SUID/SGID Binary</option><option>File Permissions</option>
+          <option>Services & Sudo</option><option>Cron Jobs</option>
+          <option>Kernel CVE</option><option>Linux Capabilities</option>
+          <option>Credentials</option><option>PATH Hijacking</option>
+          <option>Windows Service</option><option>Windows Registry</option>
+          <option>Windows Token Privileges</option><option>Windows UAC</option>
+          <option>Windows Kernel CVE</option>
+        </select>
+        <input id="find-host" placeholder="Filter by host…" oninput="loadFindings()"/>
+      </div>
+      <div id="findings-list"></div>
+      <div id="find-pages" style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"></div>
+    </div>
+
+    <!-- ── Attack Paths ───────────────────────────────────── -->
+    <div id="view-paths" style="display:none">
+      <div class="filters">
+        <select id="path-scan" onchange="loadPaths()"><option value="">Select a scan…</option></select>
+      </div>
+      <div id="paths-list"><div class="empty-state"><div class="icon">🗺️</div><p>Select a scan to view detected attack paths</p></div></div>
+    </div>
+
+    <!-- ── Compliance ─────────────────────────────────────── -->
+    <div id="view-compliance" style="display:none">
+      <div class="filters">
+        <select id="comp-scan" onchange="loadCompliance()"><option value="">Select a scan…</option></select>
+      </div>
+      <div id="compliance-list"><div class="empty-state"><div class="icon">📋</div><p>Select a scan to view compliance coverage</p></div></div>
+    </div>
+
+    <!-- ── Compare ────────────────────────────────────────── -->
+    <div id="view-compare" style="display:none">
+      <div class="chart-card" style="margin-bottom:20px">
+        <h3>Compare Two Scans</h3>
+        <div class="kpi-grid" style="margin-top:16px">
+          <div class="form-group"><label>Baseline Scan (older)</label>
+            <select id="cmp-old"><option value="">Select…</option></select></div>
+          <div class="form-group"><label>Current Scan (newer)</label>
+            <select id="cmp-new"><option value="">Select…</option></select></div>
+        </div>
+        <button class="btn btn-primary" onclick="runCompare()" style="margin-top:12px">Compare →</button>
+      </div>
+      <div id="compare-result"></div>
+    </div>
+
+    <!-- ── CVE Intel ─────────────────────────────────────────── -->
+    <div id="view-intel" style="display:none">
+
+      <!-- Status card -->
+      <div class="kpi-grid" id="intel-kpi-grid">
+        <div class="kpi-card" style="border-left:4px solid var(--accent)">
+          <div class="label">Status</div>
+          <div class="value" id="intel-status-val" style="font-size:20px;margin:8px 0 4px">—</div>
+          <div class="sub" id="intel-status-sub">—</div>
+        </div>
+        <div class="kpi-card" style="border-left:4px solid var(--critical)">
+          <div class="label">CVEs Tracked</div>
+          <div class="value" id="intel-cve-count">—</div>
+          <div class="sub">NVD enriched</div>
+        </div>
+        <div class="kpi-card" style="border-left:4px solid var(--high)">
+          <div class="label">CISA KEV</div>
+          <div class="value" id="intel-kev-count">—</div>
+          <div class="sub">Known exploited</div>
+        </div>
+        <div class="kpi-card" style="border-left:4px solid var(--low)">
+          <div class="label">Next Auto-Update</div>
+          <div class="value" id="intel-next-update" style="font-size:16px;margin:10px 0 4px">—</div>
+          <div class="sub" id="intel-age">—</div>
+        </div>
+      </div>
+
+      <!-- Sources info -->
+      <div class="charts-row" style="margin-bottom:24px">
+        <div class="chart-card">
+          <h3>📡 NVD (National Vulnerability Database)</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-top:8px">
+            CVSS scores and full CVE descriptions from NIST's NVD API v2.
+            Enriches kernel CVE findings with severity and impact data.
+          </p>
+          <div style="margin-top:12px;font-size:11px;color:var(--muted)">
+            🔗 <a href="https://nvd.nist.gov" target="_blank" style="color:var(--accent)">nvd.nist.gov</a>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>⚠️ CISA KEV Catalog</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-top:8px">
+            CISA's Known Exploited Vulnerabilities catalog — CVEs actively exploited in the wild.
+            Findings matching KEV entries are flagged as highest priority.
+          </p>
+          <div style="margin-top:12px;font-size:11px;color:var(--muted)">
+            🔗 <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" style="color:var(--accent)">cisa.gov/kev</a>
+          </div>
+        </div>
+      </div>
+      <div class="charts-row" style="margin-bottom:24px">
+        <div class="chart-card">
+          <h3>📊 EPSS Scores</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-top:8px">
+            Exploit Prediction Scoring System — probability a CVE will be exploited in the next 30 days.
+            Used to boost priority scores for high-exploitation-probability findings.
+          </p>
+          <div style="margin-top:12px;font-size:11px;color:var(--muted)">
+            🔗 <a href="https://www.first.org/epss" target="_blank" style="color:var(--accent)">first.org/epss</a>
+          </div>
+        </div>
+        <div class="chart-card" style="border-left:3px solid #6c63ff">
+          <h3>🛡️ CVE.org (MITRE CVE Program)</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-top:8px">
+            Official MITRE CVE database (CVE JSON 5.0). Provides CWE weakness classification,
+            affected vendor/product list, and authoritative reference links for each CVE.
+          </p>
+          <div style="margin-top:12px;font-size:11px;color:var(--muted)">
+            🔗 <a href="https://www.cve.org" target="_blank" style="color:var(--accent)">cve.org</a>
+            &nbsp;·&nbsp;
+            <a href="https://cveawg.mitre.org/api/cve" target="_blank" style="color:var(--accent)">API docs</a>
+          </div>
+          <div id="cveorg-stat" style="margin-top:10px;font-size:12px;color:var(--muted)">
+            <!-- populated by loadIntelStatus() -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="chart-card" style="margin-bottom:20px">
+        <h3>Update Controls</h3>
+        <div style="display:flex;align-items:center;gap:16px;margin-top:16px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="intel-update-btn" onclick="triggerIntelUpdate()">
+            🔄 Update Now
+          </button>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:13px;color:var(--muted)">Auto-update every</span>
+            <select id="intel-interval" onchange="setIntelInterval()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);padding:6px 10px;font-size:13px">
+              <option value="6">6 hours</option>
+              <option value="12">12 hours</option>
+              <option value="24" selected>24 hours (daily)</option>
+              <option value="48">48 hours</option>
+              <option value="168">7 days (weekly)</option>
+            </select>
+          </div>
+          <button class="btn btn-ghost" onclick="loadIntelStatus()">↻ Refresh Status</button>
+        </div>
+        <div id="intel-progress" style="display:none;margin-top:16px;padding:14px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="spinner"></div>
+              <span style="font-size:13px;font-weight:600" id="intel-progress-msg">Starting update…</span>
+            </div>
+            <span id="intel-progress-eta" style="font-size:12px;color:var(--muted)"></span>
+          </div>
+          <div style="margin-top:10px;background:rgba(0,0,0,.15);border-radius:4px;height:8px;overflow:hidden">
+            <div id="intel-progress-bar" style="height:100%;background:var(--accent);width:0%;transition:width 0.6s ease"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted)">
+            <span>Step 1: CISA KEV</span><span>Step 2: NVD</span><span>Step 3: EPSS</span><span>Step 4: CVE.org</span>
+          </div>
+        </div>
+        <div id="intel-error-box" style="display:none;margin-top:12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:10px 14px;font-size:13px;color:var(--critical)"></div>
+      </div>
+
+      <!-- Update history log -->
+      <div class="chart-card">
+        <h3>Last Update Details</h3>
+        <div id="intel-log" style="margin-top:12px;font-size:13px;color:var(--muted);line-height:2">
+          <em>No update has run yet in this session.</em>
+        </div>
+      </div>
+
+      <!-- CVE Details Table -->
+      <div class="chart-card" id="intel-cve-table-card" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <h3 style="margin:0">📋 Tracked CVEs</h3>
+          <input id="cve-search" type="text" placeholder="Search CVE ID, severity…"
+            oninput="filterCveTable()"
+            style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);padding:5px 10px;font-size:12px;width:220px">
+        </div>
+        <div style="overflow-x:auto">
+          <table id="cve-detail-table" style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border);color:var(--muted)">
+                <th style="text-align:left;padding:6px 8px;cursor:pointer" onclick="sortCveTable('id')">CVE ID ↕</th>
+                <th style="text-align:left;padding:6px 8px;cursor:pointer" onclick="sortCveTable('cvss')">CVSS ↕</th>
+                <th style="text-align:left;padding:6px 8px">Severity</th>
+                <th style="text-align:left;padding:6px 8px;cursor:pointer" onclick="sortCveTable('epss')">EPSS ↕</th>
+                <th style="text-align:left;padding:6px 8px">KEV</th>
+                <th style="text-align:left;padding:6px 8px">CWE</th>
+                <th style="text-align:left;padding:6px 8px">Vendors</th>
+                <th style="text-align:left;padding:6px 8px">Description</th>
+              </tr>
+            </thead>
+            <tbody id="cve-table-body">
+            </tbody>
+          </table>
+        </div>
+        <div id="cve-table-footer" style="margin-top:8px;font-size:11px;color:var(--muted)"></div>
+      </div>
+
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ── New Scan Modal ─────────────────────────────────────── -->
+<div class="modal-overlay" id="scan-modal">
+  <div class="modal">
+    <h3>Start New Scan</h3>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchScanTab('local',this)">Local</button>
+      <button class="tab-btn" onclick="switchScanTab('ssh',this)">Remote SSH</button>
+    </div>
+
+    <div id="tab-local">
+      <div class="checkbox-group form-group"><input type="checkbox" id="opt-quick"><label for="opt-quick">Quick mode (skip slow filesystem sweeps)</label></div>
+      <div class="form-group"><label>Skip modules (comma-separated)</label>
+        <input id="opt-skip" placeholder="e.g. kernel,caps"/></div>
+    </div>
+
+    <div id="tab-ssh" style="display:none">
+      <div class="form-group"><label>Host / IP *</label><input id="ssh-host" placeholder="192.168.1.10"/></div>
+      <div class="form-group"><label>Username *</label><input id="ssh-user" placeholder="admin"/></div>
+      <div class="form-group"><label>Password</label><input id="ssh-pass" type="password" placeholder="••••••"/></div>
+      <div class="form-group"><label>Port</label><input id="ssh-port" value="22" type="number"/></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeScanModal()">Cancel</button>
+      <button class="btn btn-primary" id="start-scan-btn" onclick="startScan()">Start Scan</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = '';
+let _currentScanTab = 'local';
+let _scanPage = 1, _findPage = 1;
+let _charts = {};
+
+// ── Navigation ──────────────────────────────────────────────
+function show(view) {
+  document.querySelectorAll('[id^=view-]').forEach(el => el.style.display='none');
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-'+view).style.display='block';
+  const item = [...document.querySelectorAll('.nav-item')].find(el=>el.getAttribute('onclick')===`show(\'${view}\')`);
+  if(item) item.classList.add('active');
+  const titles = {dashboard:'Dashboard',hosts:'Host Inventory',scans:'Scan History',
+    findings:'Findings Explorer',paths:'Attack Paths',compliance:'Compliance Coverage',compare:'Diff Scans'};
+  document.getElementById('page-title').textContent = titles[view]||view;
+  closeMobileMenu();
+  if(view==='dashboard') loadDashboard();
+  else if(view==='hosts') loadHosts();
+  else if(view==='scans') loadScans();
+  else if(view==='findings') loadFindings();
+  else if(view==='paths') loadScanSelect('path-scan');
+  else if(view==='compliance') loadScanSelect('comp-scan');
+  else if(view==='compare') loadCompareSelects();
+  else if(view==='intel')   loadIntelStatus();
+}
+
+function toggleMobileMenu() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.toggle('mobile-open');
+  document.body.classList.toggle('sidebar-open');
+  if (sidebar.classList.contains('mobile-open')) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+}
+
+function closeMobileMenu() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.remove('mobile-open');
+  document.body.classList.remove('sidebar-open');
+  document.body.style.overflow = '';
+}
+
+function refreshCurrent() {
+  const v = document.querySelector('[id^=view-]:not([style*="none"])')?.id.replace('view-','');
+  if(v) show(v);
+}
+
+// ── Date formatter ──────────────────────────────────────────
+// Accepts ISO strings with or without timezone suffix.
+// Old cached values (no tz marker) are treated as UTC by appending 'Z'.
+function fmtDate(d) {
+  if(!d) return '—';
+  try {
+    let s = d;
+    if(typeof s === 'string' && !s.endsWith('Z') && !s.includes('+') && s.length >= 19)
+      s = s + 'Z';
+    return new Date(s).toLocaleString(undefined, {
+      year:'numeric', month:'short', day:'numeric',
+      hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+    });
+  } catch(e) { return d; }
+}
+
+// ── API helpers ─────────────────────────────────────────────
+async function api(path, opts={}) {
+  try {
+    const r = await fetch(API+path, opts);
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } catch(e) { toast('API error: '+e.message, true); return null; }
+}
+
+// ── Toast ───────────────────────────────────────────────────
+function toast(msg, err=false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderColor = err ? 'var(--critical)' : 'var(--low)';
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 3000);
+}
+
+// ── Dashboard ───────────────────────────────────────────────
+async function loadDashboard() {
+  const data = await api('/api/stats');
+  if(!data) return;
+  const sc = data.severity_counts;
+  document.getElementById('kpi-critical').textContent = sc.CRITICAL||0;
+  document.getElementById('kpi-high').textContent     = sc.HIGH||0;
+  document.getElementById('kpi-hosts').textContent    = data.total_hosts;
+  document.getElementById('kpi-scans').textContent    = data.total_scans;
+
+  // Severity pie chart
+  const sevCtx = document.getElementById('chart-sev').getContext('2d');
+  if(_charts.sev) _charts.sev.destroy();
+  _charts.sev = new Chart(sevCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['CRITICAL','HIGH','MEDIUM','LOW'],
+      datasets: [{ data:[sc.CRITICAL||0,sc.HIGH||0,sc.MEDIUM||0,sc.LOW||0],
+        backgroundColor:['#ef4444','#f59e0b','#3b82f6','#22c55e'], borderWidth:0 }]
+    },
+    options:{ plugins:{legend:{position:'right',labels:{color:'#8892a4',font:{size:11}}}}, cutout:'65%' }
+  });
+
+  // Trend line chart
+  const trendCtx = document.getElementById('chart-trend').getContext('2d');
+  if(_charts.trend) _charts.trend.destroy();
+  const trend = data.scan_trend||[];
+  _charts.trend = new Chart(trendCtx, {
+    type: 'line',
+    data: {
+      labels: trend.map(t=>t.day),
+      datasets: [{
+        label:'Scans', data:trend.map(t=>t.cnt),
+        borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.1)',
+        fill:true, tension:.4, pointRadius:3
+      },{
+        label:'Avg Score', data:trend.map(t=>Math.round(t.avg_score||0)),
+        borderColor:'#f59e0b', backgroundColor:'transparent',
+        tension:.4, pointRadius:3, yAxisID:'y2'
+      }]
+    },
+    options:{
+      scales:{
+        x:{ticks:{color:'#8892a4',font:{size:10}}, grid:{color:'rgba(255,255,255,.04)'}},
+        y:{ticks:{color:'#8892a4',font:{size:10}}, grid:{color:'rgba(255,255,255,.04)'}},
+        y2:{position:'right',ticks:{color:'#8892a4',font:{size:10}},grid:{display:false}}
+      },
+      plugins:{legend:{labels:{color:'#8892a4',font:{size:11}}}}
+    }
+  });
+
+  // Intel status bar
+  const intelData = await api('/api/intel/status');
+  if(intelData) {
+    const colors = {idle:'var(--muted)',updating:'var(--medium)',done:'var(--low)',error:'var(--critical)'};
+    const labels = {idle:'Never updated',updating:'Updating now…',done:'Up to date',error:'Update failed'};
+    const el = document.getElementById('dash-intel-status');
+    el.style.color = colors[intelData.status] || 'var(--text)';
+    const lastStr = intelData.last_updated ? ` · Last: ${fmtDate(intelData.last_updated)}` : '';
+    const cveStr  = intelData.cve_count ? ` · ${intelData.cve_count} CVEs · ${intelData.kev_count} KEV` : '';
+    el.textContent = (labels[intelData.status]||intelData.status) + cveStr + lastStr;
+    if(intelData.is_stale) { el.textContent += ' ⚠ Stale'; el.style.color = 'var(--high)'; }
+  }
+
+  // Recent scans table
+  const tbody = document.getElementById('recent-scans-body');
+  tbody.innerHTML = (data.recent_scans||[]).map(s=>`
+    <tr>
+      <td>${s.hostname}</td>
+      <td><span class="badge badge-${s.risk_level||'LOW'}">${s.risk_level||'—'}</span></td>
+      <td>${s.risk_score||0}</td>
+      <td style="color:var(--muted);font-size:12px">${fmtDate(s.started_at)}</td>
+      <td style="display:flex;gap:5px">
+        <button class="btn btn-ghost btn-sm" onclick="viewScan('${s.id}')">View</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteScan('${s.id}',true)">Delete</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px">No scans yet — start your first scan!</td></tr>';
+}
+
+// ── Hosts ────────────────────────────────────────────────────
+async function loadHosts() {
+  const data = await api('/api/hosts');
+  if(!data) return;
+  const hosts = data.hosts||[];
+  document.getElementById('host-count').textContent = hosts.length+' hosts';
+  document.getElementById('hosts-body').innerHTML = hosts.map(h=>`
+    <tr>
+      <td><strong>${h.hostname}</strong></td>
+      <td><span style="font-size:11px;color:var(--muted)">${h.platform||'—'}</span></td>
+      <td><span class="badge badge-${h.current_risk_level||'LOW'}">${h.current_risk_level||'—'}</span></td>
+      <td style="color:var(--muted);font-size:12px">${fmtDate(h.last_scan_time)}</td>
+      <td style="color:var(--muted)">${h.total_scans}</td>
+      <td style="display:flex;gap:5px">
+        <button class="btn btn-ghost btn-sm" onclick="filterByHost('${h.hostname}')">Findings</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteHost('${h.hostname}')">Delete</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">No hosts scanned yet.</td></tr>';
+}
+
+function filterByHost(hostname) {
+  show('findings');
+  document.getElementById('find-host').value = hostname;
+  loadFindings();
+}
+
+// ── Scans ─────────────────────────────────────────────────────
+async function loadScans(page) {
+  if(page) _scanPage=page;
+  const hostname = document.getElementById('scan-search').value;
+  const status   = document.getElementById('scan-status').value;
+  const risk     = document.getElementById('scan-risk').value;
+  let url = `/api/scans?page=${_scanPage}&per_page=15`;
+  if(hostname) url+=`&hostname=${encodeURIComponent(hostname)}`;
+  if(status)   url+=`&status=${status}`;
+  if(risk)     url+=`&risk_level=${risk}`;
+  const data = await api(url);
+  if(!data) return;
+  document.getElementById('scan-total').textContent = data.total+' scans';
+  document.getElementById('scans-body').innerHTML = (data.scans||[]).map(s=>`
+    <tr>
+      <td style="font-size:11px;color:var(--muted)">${s.id.slice(0,8)}…</td>
+      <td>${s.hostname||'—'}</td>
+      <td><span style="font-size:11px;color:var(--muted)">${s.scan_type}</span></td>
+      <td><span class="badge badge-${s.status}">${s.status}</span></td>
+      <td><span class="badge badge-${s.risk_level||'LOW'}">${s.risk_level||'—'}</span></td>
+      <td>${s.risk_score||0}</td>
+      <td style="color:var(--muted);font-size:12px">${fmtDate(s.started_at)}</td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="viewScan('${s.id}')">View</button>
+        <div class="report-dropdown" style="position:relative;display:inline-block">
+          <button class="btn btn-primary btn-sm" onclick="toggleReportMenu('${s.id}',this)">📄 Report ▾</button>
+          <div id="rmenu-${s.id}" style="display:none;position:absolute;top:100%;left:0;z-index:999;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);min-width:130px;box-shadow:0 4px 16px rgba(0,0,0,.4)">
+            <div onclick="exportScan('${s.id}','pdf')"  style="padding:8px 14px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='rgba(59,130,246,.1)'" onmouseout="this.style.background=''">📕 PDF Report</div>
+            <div onclick="exportScan('${s.id}','html')" style="padding:8px 14px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='rgba(59,130,246,.1)'" onmouseout="this.style.background=''">🌐 HTML Report</div>
+            <div onclick="exportScan('${s.id}','txt')"  style="padding:8px 14px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='rgba(59,130,246,.1)'" onmouseout="this.style.background=''">📝 TXT Report</div>
+            <div onclick="exportScan('${s.id}','json')" style="padding:8px 14px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='rgba(59,130,246,.1)'" onmouseout="this.style.background=''">📦 JSON Export</div>
+            <div onclick="exportScan('${s.id}','sarif')" style="padding:8px 14px;cursor:pointer;font-size:12px" onmouseover="this.style.background='rgba(59,130,246,.1)'" onmouseout="this.style.background=''">🔬 SARIF Export</div>
+          </div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteScan('${s.id}')">Delete</button>
+      </td>
+    </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px">No scans found.</td></tr>';
+  renderPages('scan-pages', data.total, 15, _scanPage, loadScans);
+}
+
+function viewScan(id) {
+  show('findings'); document.getElementById('find-host').value='';
+  // Load findings for this specific scan by filtering
+  loadFindingsForScan(id);
+}
+async function loadFindingsForScan(scanId) {
+  const data = await api(`/api/scans/${scanId}`);
+  if(!data) return;
+  const findings = data.findings||[];
+  renderFindings(findings, `Findings for scan ${scanId.slice(0,8)}…`);
+}
+
+// ── Findings ──────────────────────────────────────────────────
+async function loadFindings(page) {
+  if(page) _findPage=page;
+  const search = document.getElementById('find-search').value;
+  const sev    = document.getElementById('find-sev').value;
+  const cat    = document.getElementById('find-cat').value;
+  const host   = document.getElementById('find-host').value;
+  let url = `/api/findings?page=${_findPage}&per_page=30`;
+  if(search) url+=`&search=${encodeURIComponent(search)}`;
+  if(sev)    url+=`&severity=${sev}`;
+  if(cat)    url+=`&category=${encodeURIComponent(cat)}`;
+  if(host)   url+=`&hostname=${encodeURIComponent(host)}`;
+  const data = await api(url);
+  if(!data) return;
+  renderFindings(data.findings||[], null, data.total);
+  renderPages('find-pages', data.total, 30, _findPage, loadFindings);
+}
+
+function renderFindings(findings, subtitle, total) {
+  const container = document.getElementById('findings-list');
+  if(!findings.length) {
+    container.innerHTML='<div class="empty-state"><div class="icon">✅</div><p>No findings match your filters.</p></div>';
+    return;
+  }
+  container.innerHTML = findings.map((f,i)=>`
+    <div class="finding-card">
+      <div class="finding-header" onclick="toggleFinding(${i})">
+        <span class="badge badge-${f.severity}" style="margin-top:2px">${f.severity}</span>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:13px">${f.type||f.category}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${f.category} ${f._hostname?'· '+f._hostname:''}</div>
+        </div>
+        <span style="color:var(--muted);font-size:18px" id="arrow-${i}">›</span>
+      </div>
+      <div class="finding-body" id="body-${i}">
+        <p>${f.description||''}</p>
+        ${f.compliance?`<p style="font-size:11px;color:var(--muted)">
+          MITRE: ${(f.compliance.mitre_attack||[]).slice(0,1).join(', ')} &nbsp;|&nbsp;
+          CIS: ${(f.compliance.cis||[]).slice(0,1).join(', ')}
+        </p>`:''}
+        <div class="mitigation">🔧 ${f.mitigation||'See details for remediation.'}</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleFinding(i) {
+  const body  = document.getElementById('body-'+i);
+  const arrow = document.getElementById('arrow-'+i);
+  const open  = body.classList.toggle('open');
+  arrow.textContent = open ? '⌄' : '›';
+}
+
+// ── Attack Paths ──────────────────────────────────────────────
+async function loadScanSelect(selectId) {
+  const data = await api('/api/scans?per_page=50&status=completed');
+  if(!data) return;
+  const sel = document.getElementById(selectId);
+  sel.innerHTML = '<option value="">Select a scan…</option>' +
+    (data.scans||[]).map(s=>`<option value="${s.id}">${s.hostname} — ${fmtDate(s.started_at)} [${s.risk_level}]</option>`).join('');
+}
+
+async function loadPaths() {
+  const scanId = document.getElementById('path-scan').value;
+  if(!scanId) return;
+  const data = await api(`/api/scans/${scanId}`);
+  if(!data) return;
+  const paths = data.attack_paths||[];
+  const container = document.getElementById('paths-list');
+  if(!paths.length) {
+    container.innerHTML='<div class="empty-state"><div class="icon">✅</div><p>No attack paths detected for this scan.</p></div>';
+    return;
+  }
+  container.innerHTML = paths.map(p=>`
+    <div class="path-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span class="badge badge-${p.severity}">${p.severity}</span>
+        <strong>${p.name}</strong>
+        <span style="font-size:11px;color:var(--muted);margin-left:auto">Confidence: ${p.confidence_pct}</span>
+      </div>
+      <p>${p.description}</p>
+      <ol class="path-steps">${(p.steps||[]).map(s=>`<li>${s}</li>`).join('')}</ol>
+      <div class="path-meta">
+        <span>MITRE: ${p.mitre_attack}</span>
+        <span>ID: ${p.id}</span>
+        <span>${p.matched_findings?.length||0} findings matched</span>
+      </div>
+    </div>`).join('');
+}
+
+// ── Compliance ────────────────────────────────────────────────
+async function loadCompliance() {
+  const scanId = document.getElementById('comp-scan').value;
+  if(!scanId) return;
+  const data = await api(`/api/scans/${scanId}`);
+  if(!data) return;
+  const findings = data.findings||[];
+  const cov = {mitre_attack:new Set(),cis:new Set(),nist_800_53:new Set(),iso_27001:new Set()};
+  findings.forEach(f=>{
+    if(f.compliance) {
+      Object.entries(f.compliance).forEach(([k,v])=>{ if(cov[k]) v.forEach(i=>cov[k].add(i)); });
+    }
+  });
+  const container = document.getElementById('compliance-list');
+  const frameworks = [
+    {key:'mitre_attack',label:'MITRE ATT&CK Techniques',color:'#ef4444'},
+    {key:'cis',label:'CIS Benchmark Controls',color:'#3b82f6'},
+    {key:'nist_800_53',label:'NIST SP 800-53 Controls',color:'#22c55e'},
+    {key:'iso_27001',label:'ISO 27001 Clauses',color:'#f59e0b'},
+  ];
+  container.innerHTML = frameworks.map(f=>`
+    <div class="framework-section">
+      <h4 style="color:${f.color}">${f.label} (${[...cov[f.key]].length} controls)</h4>
+      <div class="control-grid">${[...cov[f.key]].sort().map(c=>`
+        <div class="control-item" style="border-left-color:${f.color}">${c}</div>`).join('')||'<span style="color:var(--muted);font-size:13px">None detected</span>'}
+      </div>
+    </div>`).join('');
+}
+
+// ── Compare ───────────────────────────────────────────────────
+async function loadCompareSelects() {
+  const data = await api('/api/scans?per_page=50&status=completed');
+  if(!data) return;
+  const opts = '<option value="">Select…</option>' +
+    (data.scans||[]).map(s=>`<option value="${s.id}">${s.hostname} — ${fmtDate(s.started_at)}</option>`).join('');
+  document.getElementById('cmp-old').innerHTML = opts;
+  document.getElementById('cmp-new').innerHTML = opts;
+}
+
+async function runCompare() {
+  const old_id = document.getElementById('cmp-old').value;
+  const new_id = document.getElementById('cmp-new').value;
+  if(!old_id||!new_id) { toast('Select both scans first', true); return; }
+  const diff = await api('/api/compare', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({scan_id_old:old_id, scan_id_new:new_id})
+  });
+  if(!diff) return;
+  const s = diff.summary;
+  document.getElementById('compare-result').innerHTML = `
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-critical"><div class="stripe"></div><div class="label">New Findings</div><div class="value">${s.new_count}</div></div>
+      <div class="kpi-card kpi-low"><div class="stripe"></div><div class="label">Fixed</div><div class="value">${s.fixed_count}</div></div>
+      <div class="kpi-card kpi-high"><div class="stripe"></div><div class="label">Changed</div><div class="value">${s.changed_count}</div></div>
+      <div class="kpi-card kpi-medium"><div class="stripe"></div><div class="label">Persistent</div><div class="value">${s.persistent_count}</div></div>
+    </div>
+    <div class="chart-card" style="margin-bottom:16px">
+      <div style="font-size:13px">Risk: <strong>${s.old_risk_level}</strong> → <strong>${s.new_risk_level}</strong> &nbsp;|&nbsp;
+      Score: ${s.old_risk_score} → ${s.new_risk_score} (delta: ${s.risk_delta>0?'+':''}${s.risk_delta}) &nbsp;|&nbsp;
+      Trend: <strong style="color:${s.trend==='IMPROVED'?'var(--low)':s.trend==='WORSENED'?'var(--critical)':'var(--medium)'}">${s.trend}</strong></div>
+    </div>
+    ${diff.new.length?`<div class="table-card"><div class="table-header"><h3 style="color:var(--critical)">⚠ New Findings (${diff.new.length})</h3></div>
+      <table><thead><tr><th>Category</th><th>Type</th><th>Severity</th></tr></thead>
+      <tbody>${diff.new.map(f=>`<tr><td>${f.category}</td><td>${f.type}</td><td><span class="badge badge-${f.severity}">${f.severity}</span></td></tr>`).join('')}</tbody></table></div>`:''}
+    ${diff.fixed.length?`<div class="table-card"><div class="table-header"><h3 style="color:var(--low)">✓ Fixed Findings (${diff.fixed.length})</h3></div>
+      <table><thead><tr><th>Category</th><th>Type</th><th>Severity</th></tr></thead>
+      <tbody>${diff.fixed.map(f=>`<tr><td>${f.category}</td><td>${f.type}</td><td><span class="badge badge-${f.severity}">${f.severity}</span></td></tr>`).join('')}</tbody></table></div>`:''}`;
+}
+
+// ── Scan Modal ────────────────────────────────────────────────
+function openNewScanModal() { document.getElementById('scan-modal').classList.add('open'); }
+function closeScanModal()   { document.getElementById('scan-modal').classList.remove('open'); }
+function switchScanTab(tab, btn) {
+  _currentScanTab = tab;
+  document.getElementById('tab-local').style.display = tab==='local'?'block':'none';
+  document.getElementById('tab-ssh').style.display   = tab==='ssh'  ?'block':'none';
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+async function startScan() {
+  const btn = document.getElementById('start-scan-btn');
+  btn.disabled = true; btn.textContent = 'Starting…';
+  let result;
+  if(_currentScanTab === 'local') {
+    result = await api('/api/scans/local', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({quick:document.getElementById('opt-quick').checked, skip:document.getElementById('opt-skip').value})
+    });
+  } else {
+    const host = document.getElementById('ssh-host').value;
+    const user = document.getElementById('ssh-user').value;
+    if(!host||!user) { toast('Host and username are required', true); btn.disabled=false; btn.textContent='Start Scan'; return; }
+    result = await api('/api/scans/remote/ssh', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({host,username:user,password:document.getElementById('ssh-pass').value,port:parseInt(document.getElementById('ssh-port').value)||22})
+    });
+  }
+  btn.disabled = false; btn.textContent = 'Start Scan';
+  closeScanModal();
+  if(result) { toast('Scan started — ID: '+result.scan_id.slice(0,8)+'…'); setTimeout(()=>{ show('scans'); loadScans(); }, 500); }
+}
+
+// ── CVE Intel ────────────────────────────────────────────────
+let _intelPolling = null;
+let _cveRows = [];      // full CVE dataset for client-side filter/sort
+let _cveSortCol = 'cvss';
+let _cveSortAsc = false;
+
+// Severity colour helper
+function sevColor(sev) {
+  const m = {CRITICAL:'var(--critical)',HIGH:'var(--high)',MEDIUM:'var(--medium)',LOW:'var(--low)'};
+  return m[(sev||'').toUpperCase()] || 'var(--muted)';
+}
+
+async function loadIntelStatus() {
+  const data = await api('/api/intel/status');
+  if(!data) return;
+
+  // ── Status badge ──
+  const statusEl = document.getElementById('intel-status-val');
+  const statusColors = {idle:'var(--muted)',updating:'var(--medium)',done:'var(--low)',error:'var(--critical)'};
+  const statusLabels = {idle:'Idle',updating:'Updating…',done:'Up to date',error:'Error'};
+  statusEl.textContent = statusLabels[data.status] || data.status;
+  statusEl.style.color = statusColors[data.status] || 'var(--text)';
+  if(data.is_stale) { statusEl.textContent = 'Stale'; statusEl.style.color = 'var(--high)'; }
+
+  const lastUp = data.last_updated ? fmtDate(data.last_updated) : 'Never';
+  document.getElementById('intel-status-sub').textContent  = 'Last: ' + lastUp;
+  document.getElementById('intel-cve-count').textContent   = data.cve_count  || 0;
+  document.getElementById('intel-kev-count').textContent   = data.kev_count  || 0;
+  document.getElementById('intel-next-update').textContent = data.next_update || '—';
+  document.getElementById('intel-age').textContent = data.age_hours != null
+    ? `Cache age: ${data.age_hours}h` : 'No cache yet';
+
+  // ── Real-time progress ──
+  const isUpdating = data.status === 'updating';
+  const progDiv  = document.getElementById('intel-progress');
+  const progBar  = document.getElementById('intel-progress-bar');
+  const progMsg  = document.getElementById('intel-progress-msg');
+  const progEta  = document.getElementById('intel-progress-eta');
+  const updateBtn = document.getElementById('intel-update-btn');
+
+  updateBtn.disabled    = isUpdating;
+  updateBtn.textContent = isUpdating ? '⏳ Updating…' : '🔄 Update Now';
+  progDiv.style.display = isUpdating ? 'block' : 'none';
+
+  if(isUpdating) {
+    const prog = data.progress || {};
+    const step      = prog.step       || 0;
+    const total     = prog.total_steps || 4;
+    const stepName  = prog.step_name  || 'Working…';
+    const cvesDone  = prog.cves_done  || 0;
+    const cvesTotal = prog.cves_total || 0;
+    const eta       = prog.eta_seconds;
+
+    // Progress percent: each step = 25%; within NVD/CVEorg also count CVE fraction
+    let pct = ((step - 1) / total) * 100;
+    if(cvesTotal > 0) pct += (cvesDone / cvesTotal) * (100 / total);
+    pct = Math.max(5, Math.min(98, pct || 5));
+    progBar.style.width = pct.toFixed(1) + '%';
+
+    // Step label
+    let label = `Step ${step}/${total}: ${stepName}`;
+    if(cvesTotal > 0) label += ` — ${cvesDone}/${cvesTotal} CVEs`;
+    progMsg.textContent = label;
+
+    // ETA
+    if(eta != null && eta > 0) {
+      const m = Math.floor(eta / 60), s = eta % 60;
+      progEta.textContent = m > 0 ? `~${m}m ${s}s remaining` : `~${s}s remaining`;
+    } else {
+      progEta.textContent = '';
+    }
+
+    if(!_intelPolling) _intelPolling = setInterval(loadIntelStatus, 2000);
+  } else {
+    if(_intelPolling) { clearInterval(_intelPolling); _intelPolling = null; }
+    progBar.style.width = data.status === 'done' ? '100%' : '0%';
+    // Load CVE table once update is done (or on first load if data exists)
+    if(data.cve_count > 0) loadCveTable();
+  }
+
+  // ── Error box ──
+  const errBox = document.getElementById('intel-error-box');
+  if(data.error) { errBox.style.display = 'block'; errBox.textContent = '⚠ ' + data.error; }
+  else            { errBox.style.display = 'none'; }
+
+  // ── CVE.org card stat ──
+  const cveorgStat = document.getElementById('cveorg-stat');
+  if(cveorgStat) {
+    if(data.cveorg_count > 0) {
+      cveorgStat.innerHTML =
+        `<span style="color:var(--accent)">✔ ${data.cveorg_count} CVEs enriched with CWE &amp; vendor data</span>`;
+    } else if(data.cve_count > 0) {
+      cveorgStat.innerHTML = `<span style="color:var(--muted)">Enrichment pending next update</span>`;
+    }
+  }
+
+  // ── Log ──
+  if(data.last_updated && data.status !== 'updating') {
+    const ageStr  = data.age_hours  != null ? ` (${data.age_hours}h ago)` : '';
+    const nextStr = data.next_update       ? ` · next update ${data.next_update}` : '';
+    document.getElementById('intel-log').innerHTML =
+      `<div>✅ <strong>Last update:</strong> ${fmtDate(data.last_updated)}${ageStr}${nextStr}</div>` +
+      `<div>📦 <strong>CVEs tracked:</strong> ${data.cve_count} total · ${data.cveorg_count||0} enriched via CVE.org</div>` +
+      `<div>🔥 <strong>CISA KEV entries:</strong> ${data.kev_count} known-exploited CVEs</div>` +
+      `<div>🛡️ <strong>CVE.org (MITRE):</strong> CWE IDs, affected vendors &amp; reference links</div>` +
+      `<div>⚡ <strong>Fetch strategy:</strong> parallel workers · per-CVE 72h cache · HTTP 429 retry</div>` +
+      `<div>⏱ <strong>Auto-update interval:</strong> every ${data.auto_interval_hours}h</div>` +
+      (data.is_stale ? '<div style="color:var(--high)">⚠ Cache is stale — click Update Now to refresh</div>' : '');
+  }
+}
+
+// Load CVE detail table from /api/intel/cves
+async function loadCveTable() {
+  const data = await api('/api/intel/cves');
+  if(!data || !data.cves) return;
+  _cveRows = data.cves;
+  renderCveTable();
+  document.getElementById('intel-cve-table-card').style.display = 'block';
+}
+
+function renderCveTable() {
+  const search = (document.getElementById('cve-search')?.value || '').toLowerCase();
+  let rows = _cveRows.filter(r =>
+    !search ||
+    r.id.toLowerCase().includes(search) ||
+    (r.severity||'').toLowerCase().includes(search) ||
+    (r.description||'').toLowerCase().includes(search) ||
+    (r.cwe_ids||[]).join(' ').toLowerCase().includes(search)
+  );
+
+  // Sort
+  rows.sort((a, b) => {
+    let va = a[_cveSortCol], vb = b[_cveSortCol];
+    if(va == null) va = _cveSortAsc ? Infinity  : -Infinity;
+    if(vb == null) vb = _cveSortAsc ? Infinity  : -Infinity;
+    if(typeof va === 'string') va = va.toLowerCase();
+    if(typeof vb === 'string') vb = vb.toLowerCase();
+    return _cveSortAsc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+  });
+
+  const tbody = document.getElementById('cve-table-body');
+  if(!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="padding:16px;text-align:center;color:var(--muted)">No CVEs found</td></tr>';
+  } else {
+    tbody.innerHTML = rows.map(r => {
+      const cvss    = r.cvss  != null ? r.cvss.toFixed(1) : '—';
+      const epss    = r.epss  != null ? (r.epss * 100).toFixed(1) + '%' : '—';
+      const kev     = r.in_kev ? '<span style="color:var(--critical);font-weight:700">🔥 KEV</span>' : '<span style="color:var(--muted)">—</span>';
+      const cwes    = (r.cwe_ids||[]).slice(0,2).join(', ') || '—';
+      const vendors = (r.vendors||[]).slice(0,2).join(', ') || '—';
+      const desc    = (r.description||'').slice(0,80) + ((r.description||'').length > 80 ? '…' : '');
+      const sevC    = sevColor(r.severity);
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px 8px;font-family:monospace;white-space:nowrap">
+          <a href="https://nvd.nist.gov/vuln/detail/${r.id}" target="_blank"
+             style="color:var(--accent);text-decoration:none">${r.id}</a>
+        </td>
+        <td style="padding:6px 8px;font-weight:700;color:${sevC}">${cvss}</td>
+        <td style="padding:6px 8px"><span style="color:${sevC};font-size:11px;font-weight:600">${r.severity||'—'}</span></td>
+        <td style="padding:6px 8px">${epss}</td>
+        <td style="padding:6px 8px">${kev}</td>
+        <td style="padding:6px 8px;font-size:11px;color:var(--muted)">${cwes}</td>
+        <td style="padding:6px 8px;font-size:11px;color:var(--muted)">${vendors}</td>
+        <td style="padding:6px 8px;color:var(--muted);max-width:240px">${desc}</td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('cve-table-footer').textContent =
+    `Showing ${rows.length} of ${_cveRows.length} CVEs · click column headers to sort`;
+}
+
+function filterCveTable() { renderCveTable(); }
+
+function sortCveTable(col) {
+  if(_cveSortCol === col) _cveSortAsc = !_cveSortAsc;
+  else { _cveSortCol = col; _cveSortAsc = col === 'id'; }
+  renderCveTable();
+}
+
+async function triggerIntelUpdate() {
+  const r = await api('/api/intel/update', {method:'POST'});
+  if(!r) return;
+  if(r.status === 'already_running') { toast('Update already in progress', false); return; }
+  toast('CVE intel update started');
+  document.getElementById('intel-update-btn').disabled    = true;
+  document.getElementById('intel-update-btn').textContent = '⏳ Updating…';
+  document.getElementById('intel-progress').style.display = 'block';
+  document.getElementById('intel-progress-bar').style.width = '5%';
+  document.getElementById('intel-progress-msg').textContent = 'Starting update…';
+  document.getElementById('intel-progress-eta').textContent = '';
+  if(_intelPolling) clearInterval(_intelPolling);
+  _intelPolling = setInterval(loadIntelStatus, 2000);
+}
+
+async function setIntelInterval() {
+  const hours = parseInt(document.getElementById('intel-interval').value);
+  const r = await api(`/api/intel/interval?hours=${hours}`, {method:'POST'});
+  if(r) toast(`Auto-update set to every ${hours}h`);
+}
+
+// ── Report Export ────────────────────────────────────────────
+function toggleReportMenu(scanId, btn) {
+  // Close any other open menus first
+  document.querySelectorAll('[id^="rmenu-"]').forEach(m => {
+    if(m.id !== 'rmenu-'+scanId) m.style.display = 'none';
+  });
+  const menu = document.getElementById('rmenu-'+scanId);
+  if(menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+// Close report menus when clicking outside
+document.addEventListener('click', e => {
+  if(!e.target.closest('.report-dropdown')) {
+    document.querySelectorAll('[id^="rmenu-"]').forEach(m => m.style.display = 'none');
+  }
+});
+
+async function exportScan(scanId, fmt) {
+  // Close any open dropdown
+  document.querySelectorAll('[id^="rmenu-"]').forEach(m => m.style.display = 'none');
+
+  const fmtLabels = {pdf:'PDF', html:'HTML', txt:'TXT', json:'JSON', sarif:'SARIF'};
+  toast(`Generating ${fmtLabels[fmt]||fmt} report…`);
+
+  try {
+    const resp = await fetch(`${API}/api/scans/${scanId}/export/${fmt}`);
+    if(!resp.ok) {
+      let msg = `Export failed (HTTP ${resp.status})`;
+      try { const e = await resp.json(); msg = e.detail || msg; } catch(_){}
+      toast(msg, true); return;
+    }
+
+    // JSON / SARIF — pretty-print and download as .json
+    if(fmt === 'json' || fmt === 'sarif') {
+      const data = await resp.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const url  = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `privesc_${scanId.slice(0,8)}.${fmt}.json`;
+      a.click(); URL.revokeObjectURL(url);
+    } else {
+      // PDF / HTML / TXT — stream as file download
+      const blob = await resp.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = `privesc_${scanId.slice(0,8)}.${fmt}`;
+      a.click(); URL.revokeObjectURL(url);
+    }
+    toast(`${fmtLabels[fmt]||fmt} report downloaded ✓`);
+  } catch(e) {
+    toast('Export error: '+e.message, true);
+  }
+}
+
+// ── Delete ───────────────────────────────────────────────────
+async function deleteScan(id, refreshDashboard=false) {
+  if(!confirm('Delete this scan? This cannot be undone.')) return;
+  try {
+    const r = await fetch(`${API}/api/scans/${id}`, {method:'DELETE'});
+    if(r.ok) {
+      toast('Scan deleted');
+      if(refreshDashboard) loadDashboard();
+      else loadScans();
+    } else {
+      let msg = `Delete failed (HTTP ${r.status})`;
+      try { const e = await r.json(); msg = e.detail || msg; } catch(_) {}
+      toast(msg, true);
+    }
+  } catch(e) { toast('Network error: '+e.message, true); }
+}
+
+async function deleteHost(hostname) {
+  if(!confirm(`Delete host "${hostname}" and ALL its scans? This cannot be undone.`)) return;
+  try {
+    const r = await fetch(`${API}/api/hosts/${encodeURIComponent(hostname)}`, {method:'DELETE'});
+    if(r.ok) {
+      const d = await r.json();
+      toast(`Deleted host "${hostname}" and ${d.scans_removed} scan(s)`);
+      loadHosts();
+    } else {
+      let msg = `Delete failed (HTTP ${r.status})`;
+      try { const e = await r.json(); msg = e.detail || msg; } catch(_) {}
+      toast(msg, true);
+    }
+  } catch(e) { toast('Network error: '+e.message, true); }
+}
+
+// ── Boot ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadDashboard();
+  api('/api/intel/status').then(data => {
+    if(!data) return;
+    const colors = {idle:'var(--muted)', updating:'var(--medium)', done:'var(--low)', error:'var(--critical)'};
+    const labels = {idle:'Idle', updating:'Updating…', done:'Up to date', error:'Error'};
+    const el = document.getElementById('dash-intel-status');
+    if(!el) return;
+    el.style.color = colors[data.status] || 'var(--text)';
+    const lastStr = data.last_updated ? ` · Last: ${fmtDate(data.last_updated)}` : '';
+    const cveStr  = data.cve_count    ? ` · ${data.cve_count} CVEs · ${data.kev_count} KEV` : '';
+    el.textContent = (labels[data.status] || data.status) + cveStr + lastStr;
+    if(data.is_stale) { el.textContent += ' ⚠ Stale'; el.style.color = 'var(--high)'; }
+    if(data.status === 'updating' && !_intelPolling)
+      _intelPolling = setInterval(loadIntelStatus, 2000);
+  });
+});
+
+</script>
+</body>
+</html>
